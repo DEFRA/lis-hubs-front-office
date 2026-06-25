@@ -1,0 +1,55 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-half">
+      <h2 class="govuk-heading-m">Personal details</h2>
+      <p class="govuk-body">Name: {{ userProfile.user.firstName }} {{ userProfile.user.lastName }}</p>
+      <p class="govuk-body">Email: {{ userProfile.user.email }}</p>
+      <p class="govuk-body">Phone: {{ userProfile.user.phone | default('Unknown') }}</p>
+
+      <h2 class="govuk-heading-m">Vet Attestation Number (VAN)</h2>
+      {{ govukTag({
+        text: "Incomplete"
+      }) }}
+
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">My holdings</h2>
+      {% for holding in userProfile.holdings %}
+        <h3 class="govuk-heading-s">{{ holding.group_name }}</h3>
+        <ul class="govuk-list govuk-list--bullet">
+          {% for cph in holding.cphs %}
+            <li>{{ cph.idx }}. CPH: {{ cph.cph }} -- {{ cph.postcode }}</li>
+          {% endfor %}
+        </ul>
+        {% if holding.mapUrl %}
+          <img src="{{ holding.mapUrl }}" alt="Map of {{ holding.group_name }}" />
+        {% endif %}
+      {% else %}
+        <p class="govuk-body">No holdings are currently linked to this account.</p>
+      {% endfor %}
+    </div>
+
+    <div class="govuk-grid-column-one-half">
+      <h2 class="govuk-heading-m">My vehicles</h2>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>AS34 ABC - Trailer with 3.5 tonne capacity</li>
+        <li>XT56 XYZ - Lorry with 7.5 tonne capacity</li>
+        <li>GH78 DEF - Lorry with 12 tonne capacity</li>
+      </ul>
+
+      <h2 class="govuk-heading-m">My delegations</h2>
+      <p class="govuk-body">10/123/1233</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>dave@afarm.co.uk</li>
+        <li>another@afarm.co.uk</li>
+        <li>more@afarm.co.uk</li>
+      </ul>
+
+      <h2 class="govuk-heading-m">Farm software</h2>
+      <p class="govuk-body">If you use farm business software already for movements, you can share this livestock data automatically.</p>
+      <p class="govuk-body"><a href="/movements/version3/farm-software" class="govuk-link">Link my farm software</a></p>
+    </div>
+  </div>
+{% endblock %}
