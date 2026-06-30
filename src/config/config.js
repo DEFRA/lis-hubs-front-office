@@ -91,7 +91,7 @@ export const config = convict({
     },
     format: {
       doc: 'Format to output logs in',
-      format: ['ecs', 'pino-pretty'],
+      format: ['ecs', 'json', 'pino-pretty'],
       default: isProduction ? 'ecs' : 'pino-pretty',
       env: 'LOG_FORMAT'
     },
@@ -204,7 +204,7 @@ export const config = convict({
       env: 'MAPBOX_API_KEY',
       sensitive: true
     }
-  }
+  },
   profileService: {
     url: {
       doc: 'Profile service endpoint used to enrich hub auth sessions',

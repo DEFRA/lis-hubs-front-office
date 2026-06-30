@@ -1,5 +1,5 @@
 import hapi from '@hapi/hapi'
-import { verifyHubJwt } from '@livestock/infrastructure/auth'
+import { verifyHubJwt } from '@livestock/ui-services/auth'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const {
@@ -24,8 +24,8 @@ const { clearHubAuthSession } = vi.hoisted(() => ({
   clearHubAuthSession: vi.fn()
 }))
 
-vi.mock('@livestock/infrastructure', async () => {
-  const actual = await vi.importActual('@livestock/infrastructure')
+vi.mock('@livestock/ui-services', async () => {
+  const actual = await vi.importActual('@livestock/ui-services')
 
   return {
     ...actual,
@@ -74,9 +74,8 @@ function createConfigValueMap() {
 }
 
 function extractCookieValue(setCookieHeader, cookieName) {
-  const cookieHeader = (Array.isArray(setCookieHeader)
-    ? setCookieHeader
-    : [setCookieHeader]
+  const cookieHeader = (
+    Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
   ).find((value) => value.startsWith(`${cookieName}=`))
 
   if (!cookieHeader) {
@@ -126,8 +125,8 @@ describe('#frontOfficeAuthRoutes', () => {
       authenticatedAt: '2026-05-15T10:00:00.000Z'
     }
     const profile = {
-      groups: ['move'],
-      permissions: ['move.read', 'move.write'],
+      roles: ['lis-role-front-office-caseworker'],
+      permissions: ['lis-perm-front-office', 'lis-perm-cattle-write'],
       holdings: ['holding-1']
     }
 
@@ -163,7 +162,7 @@ describe('#frontOfficeAuthRoutes', () => {
 
     expect(payload.sub).toBe(user.sub)
     expect(payload.permissions).toEqual(profile.permissions)
-    expect(payload.roles).toEqual(user.roles)
+    expect(payload.roles).toEqual(profile.roles)
   })
 
   test('Should reuse stored permissions when minting a JWT from an existing hub auth session', async () => {
@@ -172,8 +171,8 @@ describe('#frontOfficeAuthRoutes', () => {
       email: 'test.user@example.com',
       firstName: 'Test',
       lastName: 'User',
-      roles: ['caseworker'],
-      permissions: ['status.read'],
+      roles: ['lis-role-front-office-caseworker'],
+      permissions: ['lis-perm-front-office', 'lis-perm-cattle-read'],
       serviceId: 'test-service',
       loa: 'substantial',
       amr: ['pwd']
@@ -197,11 +196,16 @@ describe('#frontOfficeAuthRoutes', () => {
     )
     const payload = await verifyHubJwt(token, jwtConfig)
 
-    expect(payload.permissions).toEqual(['status.read'])
+    expect(payload.permissions).toEqual([
+      'lis-perm-front-office',
+      'lis-perm-cattle-read'
+    ])
   })
 
   test('Should redirect to the provider authorization URL for a new front-office login', async () => {
-    buildAuthorizationUrl.mockResolvedValue('https://defra-ci.example.test/login')
+    buildAuthorizationUrl.mockResolvedValue(
+      'https://defra-ci.example.test/login'
+    )
 
     const server = await createTestServer()
     const response = await server.inject({
@@ -215,7 +219,10 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(response.headers.location).toBe(
       'https://defra-ci.example.test/login'
     )
-    expect(buildAuthorizationUrl).toHaveBeenCalledWith(expect.any(Object), undefined)
+    expect(buildAuthorizationUrl).toHaveBeenCalledWith(
+      expect.any(Object),
+      undefined
+    )
   })
 
   test('Should return a service unavailable response when OIDC login configuration is invalid', async () => {

@@ -4,8 +4,8 @@ const { fetchUserProfile } = vi.hoisted(() => ({
   fetchUserProfile: vi.fn()
 }))
 
-vi.mock('@livestock/infrastructure', async () => {
-  const actual = await vi.importActual('@livestock/infrastructure')
+vi.mock('@livestock/ui-services', async () => {
+  const actual = await vi.importActual('@livestock/ui-services')
 
   return {
     ...actual,
