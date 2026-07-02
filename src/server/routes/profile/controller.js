@@ -1,4 +1,4 @@
-import { createProfileService } from '@livestock/infrastructure'
+import { createProfileService } from '@livestock/ui-services'
 
 import { config } from '#config/config.js'
 

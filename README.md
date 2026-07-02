@@ -12,8 +12,8 @@ Expected dependencies:
 
 - `@livestock/hub-core`
 - `@livestock/hub-registry`
-- `@livestock/hub-access`
-- `@livestock/infrastructure`
+- `@livestock/ui-services`
+- `@livestock/ui-services`
 
 This project is the active external hub boundary for the solution.
 
@@ -27,7 +27,7 @@ Current state:
 - content security policy is now owned by the front-office server shell
 - shared module metadata comes from `@livestock/hub-registry`
 - shared session access comes from `@livestock/hub-core`
-- shared access filtering comes from `@livestock/hub-access`
+- shared access filtering comes from `@livestock/ui-services`
 - front-office authentication is wired through the shared hub auth mechanics
 
 Remaining work:

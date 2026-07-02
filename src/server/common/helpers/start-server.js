@@ -1,10 +1,10 @@
 import { createServer } from '#server/server.js'
 import { config } from '#config/config.js'
-import { getLoggerForConfig } from "@livestock/infrastructure/logging";
+import { getLoggerForConfig } from '@livestock/ui-services/logging'
 
 export async function startServer() {
   const server = await createServer()
-  const logger = getLoggerForConfig(config);
+  const logger = getLoggerForConfig(config)
 
   await server.start()
 
