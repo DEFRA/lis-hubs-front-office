@@ -10,9 +10,8 @@ Authentication:
 
 Expected dependencies:
 
-- `@livestock/hub-core`
-- `@livestock/hub-registry`
-- `@livestock/ui-services`
+- `@livestock/hubs-infra-core`
+- `@livestock/hubs-infra-registry`
 - `@livestock/ui-services`
 
 This project is the active external hub boundary for the solution.
@@ -25,8 +24,8 @@ Current state:
 - `/health` responds with a simple health payload
 - static asset and favicon routes are now wired through the front-office server shell
 - content security policy is now owned by the front-office server shell
-- shared module metadata comes from `@livestock/hub-registry`
-- shared session access comes from `@livestock/hub-core`
+- shared module metadata comes from `@livestock/hubs-infra-registry`
+- shared session access comes from `@livestock/hubs-infra-core`
 - shared access filtering comes from `@livestock/ui-services`
 - front-office authentication is wired through the shared hub auth mechanics
 

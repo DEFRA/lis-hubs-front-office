@@ -34,7 +34,7 @@ const configValues = {
   'auth.hubOrigin': 'http://localhost:3101'
 }
 
-vi.mock('@livestock/hub-core/auth/session', () => ({
+vi.mock('@livestock/hubs-infra-core/auth/session', () => ({
   getHubAuthSession
 }))
 
@@ -42,7 +42,7 @@ vi.mock('@livestock/ui-services/module-access', () => ({
   getAccessibleModulesForHub
 }))
 
-vi.mock('@livestock/hub-registry', () => ({
+vi.mock('@livestock/hubs-infra-registry', () => ({
   MODULES: moduleDefinitions,
   SPECIES: [
     {
