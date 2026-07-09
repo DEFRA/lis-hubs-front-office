@@ -1,3 +1,4 @@
+/** @import { Server } from '@hapi/hapi' */
 import path from 'node:path'
 
 import hapi from '@hapi/hapi'
@@ -29,6 +30,9 @@ const nunjucksConfig = createNunjucksConfig({
   getRequestBasePath
 })
 
+/**
+ * @returns {Promise<Server>}
+ */
 export async function createServer() {
   const server = hapi.server({
     host: config.get('host'),
