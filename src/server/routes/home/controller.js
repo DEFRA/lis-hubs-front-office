@@ -1,6 +1,6 @@
-import { getHubAuthSession } from '@livestock/hub-core/auth/session'
+import { getHubAuthSession } from '@livestock/hubs-infra-core/auth/session'
 import { getAccessibleModulesForHub } from '@livestock/ui-services/module-access'
-import { hydrateModuleMetadata, MODULES, SPECIES } from '@livestock/hub-registry'
+import { hydrateModuleMetadata, MODULES, SPECIES } from '@livestock/hubs-infra-registry'
 import { createSpokeAuthToken } from '@livestock/ui-services/auth'
 import { getLoggerForConfig } from '@livestock/ui-services/logging'
 

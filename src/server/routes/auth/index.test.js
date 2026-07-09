@@ -39,7 +39,7 @@ vi.mock('#config/config.js', () => ({
   }
 }))
 
-vi.mock('@livestock/hub-core/auth/session', () => ({
+vi.mock('@livestock/hubs-infra-core/auth/session', () => ({
   clearHubAuthSession,
   getHubAuthSession,
   setHubAuthSession
