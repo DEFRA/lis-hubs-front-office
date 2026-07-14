@@ -152,6 +152,12 @@ export const config = convict({
       default: '127.0.0.1',
       env: 'REDIS_HOST'
     },
+    port: {
+      doc: 'Redis cache port',
+      format: 'port',
+      default: 6379,
+      env: 'REDIS_PORT'
+    },
     username: {
       doc: 'Redis cache username',
       format: String,
