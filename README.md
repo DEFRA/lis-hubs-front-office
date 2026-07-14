@@ -35,6 +35,15 @@ Defra CI must redirect to `/sso`. The complete redirect URI is the public
 with `OIDC_REDIRECT_PATH`; the Defra CI application registration must be updated
 to exactly the same URI whenever it changes.
 
+## Direct microsite access
+
+Front office is the canonical authentication entry point for public microsite
+URLs such as `/cattle/register`. A microsite request without a valid hub JWT
+redirects to `/auth/login` on `HUB_ORIGIN` with its mounted path as a relative
+`returnUrl`. After `/sso` completes, the hub redirects the browser back to the
+original microsite path. Microsites must use the same `HUB_JWT_ISSUER`, audience,
+cookie name and signing secret as front office.
+
 Remaining work:
 
 - tighten front-office-specific module membership and capability policies
