@@ -4,8 +4,8 @@ const { fetchUserProfile } = vi.hoisted(() => ({
   fetchUserProfile: vi.fn()
 }))
 
-vi.mock('@livestock/ui-services', async () => {
-  const actual = await vi.importActual('@livestock/ui-services')
+vi.mock('@livestock/hubs-infra-access/auth', async () => {
+  const actual = await vi.importActual('@livestock/hubs-infra-access/auth')
 
   return {
     ...actual,
@@ -14,7 +14,9 @@ vi.mock('@livestock/ui-services', async () => {
 })
 
 vi.mock('#config/config.js', () => ({
-  config: {}
+  config: {
+    get: vi.fn(() => 'test-mapbox-api-key')
+  }
 }))
 
 import { profileController } from './controller.js'

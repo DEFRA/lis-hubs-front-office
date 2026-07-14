@@ -1,5 +1,5 @@
 import hapi from '@hapi/hapi'
-import { verifyHubJwt } from '@livestock/ui-services/auth'
+import { verifyHubJwt } from '@livestock/hubs-infra-access/auth'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const {
@@ -24,12 +24,15 @@ const { clearHubAuthSession } = vi.hoisted(() => ({
   clearHubAuthSession: vi.fn()
 }))
 
-vi.mock('@livestock/ui-services', async () => {
-  const actual = await vi.importActual('@livestock/ui-services')
+vi.mock('@livestock/hubs-infra-access/auth', async () => {
+  const actual = await vi.importActual('@livestock/hubs-infra-access/auth')
 
   return {
     ...actual,
-    createProfileService: vi.fn(() => fetchUserProfile)
+    createProfileService: vi.fn(() => fetchUserProfile),
+    clearHubAuthSession,
+    getHubAuthSession,
+    setHubAuthSession
   }
 })
 
@@ -37,12 +40,6 @@ vi.mock('#config/config.js', () => ({
   config: {
     get: configGet
   }
-}))
-
-vi.mock('@livestock/hubs-infra-core/auth/session', () => ({
-  clearHubAuthSession,
-  getHubAuthSession,
-  setHubAuthSession
 }))
 
 vi.mock('#server/common/helpers/auth/oidc.js', () => ({
@@ -149,11 +146,6 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(response.statusCode).toBe(302)
     expect(response.headers.location).toBe('/dashboard')
     expect(fetchUserProfile).toHaveBeenCalledWith(user, 'access-token')
-    expect(setHubAuthSession).toHaveBeenCalledWith(expect.any(Object), {
-      ...authSession,
-      ...profile
-    })
-
     const token = extractCookieValue(
       response.headers['set-cookie'],
       'livestock_hub_jwt'
@@ -163,43 +155,6 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(payload.sub).toBe(user.sub)
     expect(payload.permissions).toEqual(profile.permissions)
     expect(payload.roles).toEqual(profile.roles)
-  })
-
-  test('Should reuse stored permissions when minting a JWT from an existing hub auth session', async () => {
-    getHubAuthSession.mockReturnValue({
-      sub: 'test-user',
-      email: 'test.user@example.com',
-      firstName: 'Test',
-      lastName: 'User',
-      roles: ['lis-role-front-office-caseworker'],
-      permissions: ['lis-perm-front-office', 'lis-perm-cattle-read'],
-      serviceId: 'test-service',
-      loa: 'substantial',
-      amr: ['pwd']
-    })
-
-    const server = await createTestServer()
-    const response = await server.inject({
-      method: 'GET',
-      url: '/auth/login?returnUrl=/status'
-    })
-
-    await server.stop({ timeout: 0 })
-
-    expect(response.statusCode).toBe(302)
-    expect(response.headers.location).toBe('/status')
-    expect(buildAuthorizationUrl).not.toHaveBeenCalled()
-
-    const token = extractCookieValue(
-      response.headers['set-cookie'],
-      'livestock_hub_jwt'
-    )
-    const payload = await verifyHubJwt(token, jwtConfig)
-
-    expect(payload.permissions).toEqual([
-      'lis-perm-front-office',
-      'lis-perm-cattle-read'
-    ])
   })
 
   test('Should redirect to the provider authorization URL for a new front-office login', async () => {

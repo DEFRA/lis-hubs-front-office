@@ -10,6 +10,7 @@ Authentication:
 
 Expected dependencies:
 
+- `@livestock/hubs-infra-access`
 - `@livestock/hubs-infra-core`
 - `@livestock/hubs-infra-registry`
 - `@livestock/ui-services`
@@ -25,9 +26,14 @@ Current state:
 - static asset and favicon routes are now wired through the front-office server shell
 - content security policy is now owned by the front-office server shell
 - shared module metadata comes from `@livestock/hubs-infra-registry`
-- shared session access comes from `@livestock/hubs-infra-core`
-- shared access filtering comes from `@livestock/ui-services`
-- front-office authentication is wired through the shared hub auth mechanics
+- authentication, sessions and access decisions come from `@livestock/hubs-infra-access`
+
+## OIDC callback
+
+Defra CI must redirect to `/sso`. The complete redirect URI is the public
+`HUB_ORIGIN` followed by `/sso`. The path defaults to `/sso` and can be changed
+with `OIDC_REDIRECT_PATH`; the Defra CI application registration must be updated
+to exactly the same URI whenever it changes.
 
 Remaining work:
 
