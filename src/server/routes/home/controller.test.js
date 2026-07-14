@@ -34,11 +34,7 @@ const configValues = {
   'auth.hubOrigin': 'http://localhost:3101'
 }
 
-vi.mock('@livestock/hubs-infra-core/auth/session', () => ({
-  getHubAuthSession
-}))
-
-vi.mock('@livestock/ui-services/module-access', () => ({
+vi.mock('@livestock/hubs-infra-access', () => ({
   getAccessibleModulesForHub
 }))
 
@@ -57,8 +53,9 @@ vi.mock('@livestock/hubs-infra-registry', () => ({
   }))
 }))
 
-vi.mock('@livestock/ui-services/auth', () => ({
-  createSpokeAuthToken
+vi.mock('@livestock/hubs-infra-access/auth', () => ({
+  createSpokeAuthToken,
+  getHubAuthSession
 }))
 
 vi.mock('@livestock/ui-services/logging', () => ({
@@ -130,7 +127,7 @@ describe('#frontOfficeHomeController', () => {
     expect(response).toBe('rendered')
     expect(createSpokeAuthToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        spokeId: 'cattle-status',
+        spokeId: 'status-cattle',
         taxonomyId: 'status',
         user: authenticatedUser
       }),
