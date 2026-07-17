@@ -1,0 +1,86 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-xl">
+        Livestock Information
+      </span>
+      <h1 class="govuk-heading-xl">Welcome back{% if authenticatedUser.firstName %}, {{ authenticatedUser.firstName }}{% endif %}</h1>
+      <p class="govuk-body-l">Here is an overview of your farm{% if farms.length != 1 %}s{% endif %} and livestock.</p>
+    </div>
+  </div>
+
+  <div class="govuk-notification-banner" role="region" aria-labelledby="dashboard-messages-title">
+    <div class="govuk-notification-banner__header">
+      <h2 class="govuk-notification-banner__title" id="dashboard-messages-title">Messages</h2>
+    </div>
+    <div class="govuk-notification-banner__content">
+      {% if dashboardMessages.length %}
+        <p class="govuk-notification-banner__heading">
+          You have {{ dashboardMessages.length }} item{% if dashboardMessages.length != 1 %}s{% endif %} to review
+        </p>
+        <ul class="govuk-list govuk-list--bullet">
+          {% for message in dashboardMessages %}
+            <li>
+              <strong>{{ message.title }}</strong>
+              {% if message.text %} — {{ message.text }}{% endif %}
+              {% if message.url %}
+                <a class="govuk-notification-banner__link" href="{{ message.url }}">{{ message.linkText }}</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="govuk-notification-banner__heading">You have no outstanding actions.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      {% for farm in farms %}
+        {% set farmIndex = loop.index %}
+        <section aria-labelledby="farm-{{ farmIndex }}-heading" class="govuk-!-margin-bottom-8">
+          <h3 class="govuk-heading-m" id="farm-{{ farmIndex }}-heading">{{ farm.name }}</h3>
+
+          {% for cph in farm.cphs %}
+            <div class="govuk-summary-card">
+              <div class="govuk-summary-card__title-wrapper">
+                <h4 class="govuk-summary-card__title">CPH {{ cph.id }}</h4>
+                {% if cph.postcode %}
+                  <h4 class="govuk-summary-card__title">{{ cph.postcode }}</h4>
+                {% endif %}
+              </div>
+              <div class="govuk-summary-card__content">
+                <dl class="govuk-summary-list">
+                  {% for speciesSummary in cph.species %}
+                    <div class="govuk-summary-list__row">
+                      <dt class="govuk-summary-list__key">{{ speciesSummary.label }}</dt>
+                      <dd class="govuk-summary-list__value">
+                        {{ speciesSummary.count }} animal{% if speciesSummary.count != 1 %}s{% endif %}
+                      </dd>
+                      {% if speciesSummary.url %}
+                        <dd class="govuk-summary-list__actions">
+                          <a class="govuk-link" href="{{ speciesSummary.url }}">
+                            View<span class="govuk-visually-hidden"> {{ speciesSummary.label | lower }} at CPH {{ cph.id }}</span>
+                          </a>
+                        </dd>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </dl>
+              </div>
+            </div>
+          {% endfor %}
+        </section>
+      {% else %}
+        <p class="govuk-body">No farms or livestock summaries are currently available.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <p>
+    <a class="govuk-link" href="{{ logoutUrl }}">Sign out</a>
+  </p>
+{% endblock %}

@@ -54,4 +54,37 @@ describe('#frontOfficeServer', () => {
     expect(response.statusCode).toBe(200)
     expect(response.result).toContain('Livestock Information')
   })
+
+  test('Should render the farm and species dashboard', async () => {
+    const result = await server.render('home/summary', {
+      authenticatedUser: { firstName: 'Test', lastName: 'User' },
+      dashboardMessages: [],
+      farms: [
+        {
+          name: 'My farm',
+          cphs: [
+            {
+              id: '10/081/1234',
+              postcode: 'MK11 1AA',
+              species: [
+                {
+                  id: 'cattle',
+                  label: 'Cattle',
+                  count: 7,
+                  url: '/cattle/home'
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      logoutUrl: '/auth/logout'
+    })
+
+    expect(result).toContain('Welcome back')
+    expect(result).toContain('You have no outstanding actions')
+    expect(result).toContain('My farm')
+    expect(result).toContain('CPH 10/081/1234')
+    expect(result).toContain('7 animals')
+  })
 })
