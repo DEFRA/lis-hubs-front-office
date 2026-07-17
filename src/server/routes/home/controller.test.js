@@ -15,12 +15,21 @@ const {
   },
   moduleDefinitions: [
     {
-      id: 'status-cattle',
-      label: 'Status for Cattle',
-      path: '/cattle/status',
-      port: 3210,
-      taxonomy: 'status',
+      id: 'cattle-home',
+      label: 'Home for Cattle',
+      path: '/cattle/home',
+      port: 3221,
+      taxonomy: 'home',
       species: 'ctt',
+      hubs: ['front-office', 'back-office']
+    },
+    {
+      id: 'sheep-home',
+      label: 'Home for Sheep',
+      path: '/sheep/home',
+      port: 3224,
+      taxonomy: 'home',
+      species: 'shp',
       hubs: ['front-office', 'back-office']
     }
   ]
@@ -31,7 +40,8 @@ const configValues = {
   'auth.hubJwt.issuer': 'http://localhost:3101',
   'auth.hubJwt.audience': 'livestock-spokes',
   'auth.hubJwt.ttlSeconds': 14400,
-  'auth.hubOrigin': 'http://localhost:3101'
+  'auth.hubOrigin': 'http://localhost:3101',
+  'tracing.header': 'x-cdp-request-id'
 }
 
 vi.mock('@livestock/hubs-infra-access', () => ({
@@ -44,12 +54,16 @@ vi.mock('@livestock/hubs-infra-registry', () => ({
     {
       code: 'ctt',
       label: 'Cattle'
+    },
+    {
+      code: 'shp',
+      label: 'Sheep'
     }
   ],
   hydrateModuleMetadata: vi.fn((module) => ({
     ...module,
-    taxonomyLabel: 'Status',
-    speciesLabel: 'Cattle'
+    taxonomyLabel: 'Home',
+    speciesLabel: module.species === 'ctt' ? 'Cattle' : 'Sheep'
   }))
 }))
 
@@ -101,7 +115,7 @@ describe('#frontOfficeHomeController', () => {
     )
   })
 
-  test('Should render livestock status summaries for authenticated users', async () => {
+  test('Should render livestock home summaries for authenticated users', async () => {
     const authenticatedUser = {
       sub: 'user-1',
       firstName: 'Test',
@@ -112,23 +126,69 @@ describe('#frontOfficeHomeController', () => {
     getHubAuthSession.mockReturnValue(authenticatedUser)
     getAccessibleModulesForHub.mockReturnValue(moduleDefinitions)
     createSpokeAuthToken.mockResolvedValue('Bearer token')
-    global.fetch.mockResolvedValue({
+    global.fetch.mockImplementation(async (url) => ({
       ok: true,
-      text: vi.fn().mockResolvedValue('<p>Status ok</p>')
-    })
+      json: vi.fn().mockResolvedValue(
+        url.includes('/cattle/')
+          ? {
+              species: {
+                id: 'cattle',
+                label: 'Cattle',
+                url: '/cattle/home'
+              },
+              holdings: [
+                {
+                  farmName: 'My farm',
+                  cph: '10/081/1234',
+                  postcode: 'MK11 1AA',
+                  count: 7,
+                  url: '/cattle/home'
+                }
+              ],
+              actions: [
+                {
+                  title: 'Check cattle records',
+                  text: 'One record needs attention.',
+                  url: '/cattle/home',
+                  linkText: 'Review cattle'
+                }
+              ]
+            }
+          : {
+              species: {
+                id: 'sheep',
+                label: 'Sheep',
+                url: '/sheep/home'
+              },
+              holdings: [
+                {
+                  farmName: 'My farm',
+                  cph: '10/081/1234',
+                  postcode: 'MK11 1AA',
+                  count: 12,
+                  url: '/sheep/home'
+                }
+              ],
+              actions: []
+            }
+      )
+    }))
 
     const response = await homeController.handler(
-      {},
+      { headers: { 'x-cdp-request-id': 'trace-123' } },
       {
         view
       }
     )
 
     expect(response).toBe('rendered')
+    expect(getAccessibleModulesForHub).toHaveBeenCalledWith(
+      expect.objectContaining({ taxonomy: 'home' })
+    )
     expect(createSpokeAuthToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        spokeId: 'status-cattle',
-        taxonomyId: 'status',
+        spokeId: 'cattle-home',
+        taxonomyId: 'home',
         user: authenticatedUser
       }),
       expect.objectContaining({
@@ -136,27 +196,90 @@ describe('#frontOfficeHomeController', () => {
       })
     )
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:3101/cattle/status/',
+      'http://localhost:3101/cattle/home/summary-data',
       expect.objectContaining({
         method: 'GET',
         headers: {
-          Authorization: 'Bearer token'
+          Accept: 'application/json',
+          Authorization: 'Bearer token',
+          'x-cdp-request-id': 'trace-123'
         }
       })
     )
     expect(view).toHaveBeenCalledWith(
-      'home/status',
+      'home/summary',
       expect.objectContaining({
         authenticatedUser,
-        spokes: [
-          expect.objectContaining({
-            status: {
-              ok: true,
-              value: '<p>Status ok</p>'
-            }
-          })
+        dashboardMessages: [
+          {
+            title: 'Check cattle records',
+            text: 'One record needs attention.',
+            url: '/cattle/home',
+            linkText: 'Review cattle'
+          }
+        ],
+        farms: [
+          {
+            name: 'My farm',
+            cphs: [
+              {
+                id: '10/081/1234',
+                postcode: 'MK11 1AA',
+                species: [
+                  {
+                    id: 'cattle',
+                    label: 'Cattle',
+                    count: 7,
+                    url: '/cattle/home'
+                  },
+                  {
+                    id: 'sheep',
+                    label: 'Sheep',
+                    count: 12,
+                    url: '/sheep/home'
+                  }
+                ]
+              }
+            ]
+          }
         ]
       })
+    )
+  })
+
+  test('Should surface unavailable species summaries as dashboard messages', async () => {
+    const authenticatedUser = {
+      sub: 'user-1',
+      firstName: 'Test',
+      lastName: 'User'
+    }
+    const view = vi.fn(() => 'rendered')
+
+    getHubAuthSession.mockReturnValue(authenticatedUser)
+    getAccessibleModulesForHub.mockReturnValue([moduleDefinitions[0]])
+    createSpokeAuthToken.mockResolvedValue('Bearer token')
+    global.fetch.mockResolvedValue({
+      ok: false,
+      status: 503,
+      statusText: 'Service Unavailable'
+    })
+
+    await homeController.handler({ headers: {} }, { view })
+
+    expect(view).toHaveBeenCalledWith(
+      'home/summary',
+      expect.objectContaining({
+        dashboardMessages: [
+          {
+            title: 'Cattle summary unavailable',
+            text: 'Error fetching livestock summary, please try again later.'
+          }
+        ],
+        farms: []
+      })
+    )
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to fetch spoke summary for cattle-home: 503 Service Unavailable'
     )
   })
 })

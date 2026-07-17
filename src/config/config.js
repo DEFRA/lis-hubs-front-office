@@ -203,6 +203,14 @@ export const config = convict({
       default: isDevelopment
     }
   },
+  tracing: {
+    header: {
+      doc: 'Which header to track',
+      format: String,
+      default: 'x-cdp-request-id',
+      env: 'TRACING_HEADER'
+    }
+  },
   mapbox: {
     apiKey: {
       doc: 'API key sent to access MAPBOX',
