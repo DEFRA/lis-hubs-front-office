@@ -105,7 +105,7 @@ describe('#frontOfficeAuthRoutes', () => {
     getHubAuthSession.mockReturnValue(null)
   })
 
-  test('Should enrich the callback session with profile permissions before minting the hub JWT', async () => {
+  test('Should translate profile roles before minting the hub JWT', async () => {
     const user = {
       sub: 'test-user',
       email: 'test.user@example.com',
@@ -122,8 +122,8 @@ describe('#frontOfficeAuthRoutes', () => {
       authenticatedAt: '2026-05-15T10:00:00.000Z'
     }
     const profile = {
-      roles: ['lis-role-front-office-caseworker'],
-      permissions: ['lis-perm-front-office', 'lis-perm-cattle-write'],
+      roles: ['livestockowner'],
+      roleAssignments: [{ role: 'livestockowner', cph: '10/081/1234' }],
       holdings: ['holding-1']
     }
 
@@ -153,8 +153,24 @@ describe('#frontOfficeAuthRoutes', () => {
     const payload = await verifyHubJwt(token, jwtConfig)
 
     expect(payload.sub).toBe(user.sub)
-    expect(payload.permissions).toEqual(profile.permissions)
-    expect(payload.roles).toEqual(profile.roles)
+    expect(payload.roles).toEqual([
+      'lis-role-reader',
+      'lis-role-front-office',
+      'lis-role-cattle-read'
+    ])
+    expect('permissions' in payload).toBe(false)
+    expect(payload.roleAssignments).toEqual([
+      {
+        role: 'lis-role-front-office',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-cattle-read',
+        cph: '10/081/1234'
+      }
+    ])
+    expect('permissionAssignments' in payload).toBe(false)
+    expect(payload.authzVersion).toBe(1)
   })
 
   test('Should redirect to the provider authorization URL for a new front-office login', async () => {

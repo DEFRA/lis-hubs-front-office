@@ -1,7 +1,8 @@
 import {
   createHubAuthPlugin,
   createHubCookieOptions,
-  createProfileService
+  createProfileService,
+  resolveAuthorization
 } from '@livestock/hubs-infra-access/auth'
 
 import { config } from '#config/config.js'
@@ -12,6 +13,17 @@ import {
 } from '#server/common/helpers/auth/oidc.js'
 
 const fetchUserProfile = createProfileService({ config })
+
+async function resolveAuthSession({ user, accessToken }) {
+  const profile = await fetchUserProfile(user, accessToken)
+
+  return resolveAuthorization({
+    source: 'profile',
+    sourceRoles: profile.roles,
+    roleAssignments: profile.roleAssignments,
+    holdings: profile.holdings
+  })
+}
 
 function getHubJwtCookieName() {
   return config.get('auth.hubJwt.cookieName')
@@ -37,7 +49,7 @@ export const auth = createHubAuthPlugin({
   getHubJwtCookieName,
   getCookieOptions,
   getHubJwtConfig,
-  fetchUserProfile,
+  resolveAuthSession,
   buildAuthorizationUrl,
   completeAuthorizationCodeGrant,
   buildLogoutUrl,
