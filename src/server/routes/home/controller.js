@@ -33,6 +33,7 @@ export const homeController = {
 
       return h.view('home/summary', {
         ...viewModel,
+        pageTitle: 'Your holding',
         ...buildDashboard(viewModel.spokes)
       })
     }
@@ -161,13 +162,80 @@ function buildDashboard(spokes) {
     addHoldings(farmsByName, holdings, species)
   }
 
+  const farms = [...farmsByName.values()].map((farm) => ({
+    name: farm.name,
+    cphs: [...farm.cphsById.values()]
+  }))
+
   return {
     dashboardMessages,
-    farms: [...farmsByName.values()].map((farm) => ({
-      name: farm.name,
-      cphs: [...farm.cphsById.values()]
-    }))
+    farms,
+    activeHolding: buildActiveHolding(farms[0], dashboardMessages)
   }
+}
+
+function buildActiveHolding(farm, dashboardMessages) {
+  const holding = farm?.cphs[0]
+
+  if (!holding) {
+    return null
+  }
+
+  const summaryRows = [
+    {
+      key: { text: 'CPH number' },
+      value: {
+        html: `<a class="govuk-link" href="/cattle/home?cph=${encodeURIComponent(holding.id)}">${holding.id}</a>`
+      }
+    },
+    {
+      key: { text: 'Holding name' },
+      value: { text: holding.holdingName ?? farm.name }
+    },
+    { key: { text: 'Business name' }, value: { text: holding.businessName } },
+    { key: { text: 'Address' }, lines: normaliseAddress(holding.address) },
+    { key: { text: 'Holding type' }, value: { text: holding.holdingType } },
+    {
+      key: { text: 'Registered keeper' },
+      value: { text: holding.registeredKeeper }
+    },
+    { key: { text: 'Herd mark' }, value: { text: holding.herdMark } }
+  ]
+
+  return {
+    ...holding,
+    summaryRows,
+    name: holding.holdingName ?? farm.name,
+    animalsUrl: holding.species.find((item) => item.url)?.url,
+    errorsUrl: dashboardMessages.find((message) => message.url)?.url,
+    animalsOnHolding: [],
+    animalErrors: []
+  }
+}
+
+function normaliseAddress(address) {
+  if (Array.isArray(address)) {
+    return address.filter(Boolean)
+  }
+
+  if (typeof address === 'string') {
+    return address.split(/\r?\n/).filter(Boolean)
+  }
+
+  if (address && typeof address === 'object') {
+    const lines = [
+      address.line1,
+      address.line2,
+      address.town,
+      address.county,
+      address.postcode,
+      address.country
+    ].filter(Boolean)
+
+    return lines.join("<br>")
+  }
+
+  return null
 }
 
 function addActions(dashboardMessages, actions, species) {
@@ -213,9 +281,30 @@ function getOrCreateCph(farm, holding) {
     farm.cphsById.set(holding.cph, {
       id: holding.cph,
       postcode: holding.postcode,
+      holdingName: holding.holdingName ?? holding.farmName,
+      businessName: holding.businessName,
+      address: holding.address,
+      holdingType: holding.holdingType,
+      registeredKeeper: holding.registeredKeeper,
+      herdMark: holding.herdMark,
       species: []
     })
   }
 
-  return farm.cphsById.get(holding.cph)
+  const cph = farm.cphsById.get(holding.cph)
+
+  for (const field of [
+    'postcode',
+    'holdingName',
+    'businessName',
+    'address',
+    'holdingType',
+    'registeredKeeper',
+    'herdMark'
+  ]) {
+    const sourceField = field === 'holdingName' ? 'farmName' : field
+    cph[field] ??= holding[field] ?? holding[sourceField]
+  }
+
+  return cph
 }

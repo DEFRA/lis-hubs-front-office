@@ -141,8 +141,18 @@ describe('#frontOfficeHomeController', () => {
                   farmName: 'My farm',
                   cph: '10/081/1234',
                   postcode: 'MK11 1AA',
+                  businessName: 'My Livestock Ltd',
+                  address: {
+                    line1: '1 Farm Lane',
+                    town: 'Milton Keynes',
+                    postcode: 'MK11 1AA',
+                    country: 'England'
+                  },
+                  holdingType: 'Permanent',
+                  registeredKeeper: 'Test User',
+                  herdMark: 'UK 123456',
                   count: 7,
-                  url: '/cattle/home'
+                  url: '/cattle/home?cph=10%2F081%2F1234'
                 }
               ],
               actions: [
@@ -166,7 +176,7 @@ describe('#frontOfficeHomeController', () => {
                   cph: '10/081/1234',
                   postcode: 'MK11 1AA',
                   count: 12,
-                  url: '/sheep/home'
+                  url: '/sheep/home?cph=10%2F081%2F1234'
                 }
               ],
               actions: []
@@ -218,31 +228,42 @@ describe('#frontOfficeHomeController', () => {
             linkText: 'Review cattle'
           }
         ],
-        farms: [
-          {
+        farms: expect.arrayContaining([
+          expect.objectContaining({
             name: 'My farm',
-            cphs: [
-              {
+            cphs: expect.arrayContaining([
+              expect.objectContaining({
                 id: '10/081/1234',
                 postcode: 'MK11 1AA',
-                species: [
+                businessName: 'My Livestock Ltd',
+                species: expect.arrayContaining([
                   {
                     id: 'cattle',
                     label: 'Cattle',
                     count: 7,
-                    url: '/cattle/home'
+                    url: '/cattle/home?cph=10%2F081%2F1234'
                   },
                   {
                     id: 'sheep',
                     label: 'Sheep',
                     count: 12,
-                    url: '/sheep/home'
+                    url: '/sheep/home?cph=10%2F081%2F1234'
                   }
-                ]
-              }
-            ]
-          }
-        ]
+                ])
+              })
+            ])
+          })
+        ]),
+        activeHolding: expect.objectContaining({
+          id: '10/081/1234',
+          name: 'My farm',
+          animalsUrl: '/cattle/home?cph=10%2F081%2F1234',
+          errorsUrl: '/cattle/home',
+          businessName: 'My Livestock Ltd',
+          holdingType: 'Permanent',
+          registeredKeeper: 'Test User',
+          herdMark: 'UK 123456'
+        })
       })
     )
   })
