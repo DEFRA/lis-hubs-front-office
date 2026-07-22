@@ -55,36 +55,40 @@ describe('#frontOfficeServer', () => {
     expect(response.result).toContain('Livestock Information')
   })
 
-  test('Should render the farm and species dashboard', async () => {
+  test('Should render the holding landing page', async () => {
     const result = await server.render('home/summary', {
+      pageTitle: 'Your holding',
       authenticatedUser: { firstName: 'Test', lastName: 'User' },
       dashboardMessages: [],
-      farms: [
-        {
-          name: 'My farm',
-          cphs: [
-            {
-              id: '10/081/1234',
-              postcode: 'MK11 1AA',
-              species: [
-                {
-                  id: 'cattle',
-                  label: 'Cattle',
-                  count: 7,
-                  url: '/cattle/home'
-                }
-              ]
-            }
-          ]
-        }
-      ],
+      activeHolding: {
+        id: '10/081/1234',
+        name: 'My farm',
+        animalsUrl: '/cattle/home?cph=10%2F081%2F1234',
+        errorsUrl: '/cattle/errors',
+        summaryRows: [
+          { key: { text: 'CPH number' }, value: { text: '10/081/1234' } },
+          { key: { text: 'Holding name' }, value: { text: 'My farm' } },
+          {
+            key: { text: 'Business name' },
+            value: { text: 'My Livestock Ltd' }
+          },
+          { key: { text: 'Holding type' }, value: { text: 'Permanent' } },
+          { key: { text: 'Registered keeper' }, value: { text: 'Test User' } },
+          { key: { text: 'Herd mark' }, value: { text: 'UK 123456' } }
+        ]
+      },
       logoutUrl: '/auth/logout'
     })
 
-    expect(result).toContain('Welcome back')
-    expect(result).toContain('You have no outstanding actions')
     expect(result).toContain('My farm')
-    expect(result).toContain('CPH 10/081/1234')
-    expect(result).toContain('7 animals')
+    expect(result).toContain('CPH number:')
+    expect(result).toContain(
+      'href="/cattle/home?cph=10%2F081%2F1234">10/081/1234</a>'
+    )
+    expect(result).toContain('Holding details')
+    expect(result).toContain('Animals on holding')
+    expect(result).toContain('Animal error record')
+    expect(result).toContain('My Livestock Ltd')
+    expect(result).toContain('UK 123456')
   })
 })

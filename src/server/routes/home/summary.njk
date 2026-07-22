@@ -1,86 +1,119 @@
 {% extends 'layouts/page.njk' %}
 
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <span class="govuk-caption-xl">
-        Livestock Information
-      </span>
-      <h1 class="govuk-heading-xl">Welcome back{% if authenticatedUser.firstName %}, {{ authenticatedUser.firstName }}{% endif %}</h1>
-      <p class="govuk-body-l">Here is an overview of your farm{% if farms.length != 1 %}s{% endif %} and livestock.</p>
+  {% if dashboardMessages.length %}
+    <div class="govuk-notification-banner" role="region" aria-labelledby="important-title">
+      <div class="govuk-notification-banner__header">
+        <h2 class="govuk-notification-banner__title" id="important-title">Important</h2>
+      </div>
+      <div class="govuk-notification-banner__content">
+        {% for message in dashboardMessages %}
+          <p class="govuk-notification-banner__heading">
+            {{ message.title }}{% if message.text %} {{ message.text }}{% endif %}
+            {% if message.url %}
+              <a class="govuk-notification-banner__link" href="{{ message.url }}">{{ message.linkText }}</a>
+            {% endif %}
+          </p>
+        {% endfor %}
+      </div>
     </div>
-  </div>
+  {% endif %}
 
-  <div class="govuk-notification-banner" role="region" aria-labelledby="dashboard-messages-title">
-    <div class="govuk-notification-banner__header">
-      <h2 class="govuk-notification-banner__title" id="dashboard-messages-title">Messages</h2>
-    </div>
-    <div class="govuk-notification-banner__content">
-      {% if dashboardMessages.length %}
-        <p class="govuk-notification-banner__heading">
-          You have {{ dashboardMessages.length }} item{% if dashboardMessages.length != 1 %}s{% endif %} to review
+  {% set holdingDetails %}
+    {{ govukSummaryList({
+      rows: activeHolding.summaryRows
+    }) }}
+  {% endset -%}
+
+  {% set holdingAnimals %}
+    {{ govukTable({
+      head: [
+        {
+          text: "Ear tag number"
+        },
+        {
+          text: "Date of birth"
+        },
+        {
+          text: "Date registered"
+        },
+        {
+          text: "Sex"
+        },
+        {
+          text: "Breed"
+        }
+      ],
+      rows: activeHolding.animalsOnHolding
+    }) }}
+  {% endset -%}
+
+  {% set animalErrors %}
+    {% if animalErrors.length %}
+      {% call govukInsetText() %}
+        <h2 class="govuk-heading-m">
+          How to rectify animal error records
+        </h2>
+
+        <p class="govuk-body">
+          Please contact BCMS for more information:
         </p>
-        <ul class="govuk-list govuk-list--bullet">
-          {% for message in dashboardMessages %}
-            <li>
-              <strong>{{ message.title }}</strong>
-              {% if message.text %} — {{ message.text }}{% endif %}
-              {% if message.url %}
-                <a class="govuk-notification-banner__link" href="{{ message.url }}">{{ message.linkText }}</a>
-              {% endif %}
-            </li>
-          {% endfor %}
+
+        <ul class="govuk-list">
+          <li>
+            Email: <a class="govuk-link" href="#">bcmsenquiries@rpa.gov.uk</a>
+          </li>
+          <li>
+            BCMS helpline: 0345 050 1234
+          </li>
+          <li>
+            Helpline for cattle keepers in Wales: 0345 050 3456
+          </li>
         </ul>
-      {% else %}
-        <p class="govuk-notification-banner__heading">You have no outstanding actions.</p>
-      {% endif %}
-    </div>
-  </div>
+      {% endcall %}
+    {% else %}
+    <p class="govuk-body">There are no issues that require your attention.</p>
+    {% endif %}
+  {% endset -%}
 
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-      {% for farm in farms %}
-        {% set farmIndex = loop.index %}
-        <section aria-labelledby="farm-{{ farmIndex }}-heading" class="govuk-!-margin-bottom-8">
-          <h3 class="govuk-heading-m" id="farm-{{ farmIndex }}-heading">{{ farm.name }}</h3>
+  {% if activeHolding %}
+    <span class="govuk-caption-l">
+      CPH number:
+      <a class="govuk-link" href="{{ activeHolding.animalsUrl }}">{{ activeHolding.id }}</a>
+    </span>
+    <h1 class="govuk-heading-l">{{ activeHolding.name }}</h1>
 
-          {% for cph in farm.cphs %}
-            <div class="govuk-summary-card">
-              <div class="govuk-summary-card__title-wrapper">
-                <h4 class="govuk-summary-card__title">CPH {{ cph.id }}</h4>
-                {% if cph.postcode %}
-                  <h4 class="govuk-summary-card__title">{{ cph.postcode }}</h4>
-                {% endif %}
-              </div>
-              <div class="govuk-summary-card__content">
-                <dl class="govuk-summary-list">
-                  {% for speciesSummary in cph.species %}
-                    <div class="govuk-summary-list__row">
-                      <dt class="govuk-summary-list__key">{{ speciesSummary.label }}</dt>
-                      <dd class="govuk-summary-list__value">
-                        {{ speciesSummary.count }} animal{% if speciesSummary.count != 1 %}s{% endif %}
-                      </dd>
-                      {% if speciesSummary.url %}
-                        <dd class="govuk-summary-list__actions">
-                          <a class="govuk-link" href="{{ speciesSummary.url }}">
-                            View<span class="govuk-visually-hidden"> {{ speciesSummary.label | lower }} at CPH {{ cph.id }}</span>
-                          </a>
-                        </dd>
-                      {% endif %}
-                    </div>
-                  {% endfor %}
-                </dl>
-              </div>
-            </div>
-          {% endfor %}
-        </section>
-      {% else %}
-        <p class="govuk-body">No farms or livestock summaries are currently available.</p>
-      {% endfor %}
-    </div>
-  </div>
+    {{ govukTabs({
+      items: [
+        {
+          label: "Holding details",
+          id: "details",
+          panel: {
+            html: holdingDetails
+          }
+        },
+        {
+          label: "Animals on holding",
+          id: "animal-on-holding",
+          panel: {
+            html: holdingAnimals
+          }
+        },
+        {
+          label: "Animal error record",
+          id: "animal-error",
+          panel: {
+            html: animalErrors
+          }
+        }
+      ]
+    }) }}
+  {% else %}
+    <h1 class="govuk-heading-l">Your holding</h1>
+    <p class="govuk-body">No holding details are currently available.</p>
+  {% endif %}
 
-  <p>
+  <p class="govuk-!-margin-top-8">
     <a class="govuk-link" href="{{ logoutUrl }}">Sign out</a>
   </p>
 {% endblock %}
