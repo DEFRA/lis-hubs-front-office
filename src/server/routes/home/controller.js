@@ -12,6 +12,81 @@ import { getLoggerForConfig } from '@livestock/ui-services/logging'
 
 import { config } from '#config/config.js'
 
+const SAMPLE_ANIMALS_ON_HOLDING = [
+  [
+    { text: 'UK 123456 100001' },
+    { text: '15 January 2024' },
+    { text: '18 January 2024' },
+    { text: 'Female' },
+    { text: 'Holstein Friesian' },
+    {
+      html: '<strong class="govuk-tag govuk-tag--green">Valid</strong>'
+    }
+  ],
+  [
+    { text: 'UK 123456 100002' },
+    { text: '3 February 2024' },
+    { text: '6 February 2024' },
+    { text: 'Male' },
+    { text: 'Aberdeen Angus' },
+    {
+      html: '<strong class="govuk-tag govuk-tag--green">Valid</strong>'
+    }
+  ],
+  [
+    { text: 'UK 123456 100003' },
+    { text: '20 February 2024' },
+    { text: '23 February 2024' },
+    { text: 'Female' },
+    { text: 'Jersey' },
+    {
+      html: '<strong class="govuk-tag govuk-tag--blue">Pending</strong>'
+    }
+  ],
+  [
+    { text: 'UK 123456 100004' },
+    { text: '8 March 2024' },
+    { text: '11 March 2024' },
+    { text: 'Female' },
+    { text: 'Limousin' },
+    {
+      html: '<strong class="govuk-tag govuk-tag--green">Valid</strong>'
+    }
+  ],
+  [
+    { text: 'UK 123456 100005' },
+    { text: '27 March 2024' },
+    { text: '2 April 2024' },
+    { text: 'Male' },
+    { text: 'Hereford' },
+    {
+      html: '<strong class="govuk-tag govuk-tag--red">Error</strong>'
+    }
+  ]
+]
+
+const SAMPLE_ANIMAL_ERRORS = [
+  {
+    earTag: 'UK 123456 100005',
+    summaryRows: [
+      {
+        key: { text: 'Date of birth' },
+        value: { text: '27 March 2024' }
+      },
+      {
+        key: { text: 'Date of registration' },
+        value: { text: '2 April 2024' }
+      },
+      {
+        key: { text: 'Reason for error' },
+        value: {
+          text: 'Ear tag number does not match the number recorded at birth notification.'
+        }
+      }
+    ]
+  }
+]
+
 const currentHubId = 'front-office'
 
 export const homeController = {
@@ -166,12 +241,30 @@ function buildDashboard(spokes) {
     name: farm.name,
     cphs: [...farm.cphsById.values()]
   }))
+  const activeHolding = buildActiveHolding(farms[0], dashboardMessages)
+
+  addAnimalErrorMessage(dashboardMessages, activeHolding)
 
   return {
     dashboardMessages,
     farms,
-    activeHolding: buildActiveHolding(farms[0], dashboardMessages)
+    activeHolding
   }
+}
+
+function addAnimalErrorMessage(dashboardMessages, activeHolding) {
+  const errorCount = activeHolding?.animalErrors.length ?? 0
+
+  if (errorCount === 0) {
+    return
+  }
+
+  dashboardMessages.push({
+    title: 'Animal records need attention',
+    text: `${errorCount} animal ${errorCount === 1 ? 'record has' : 'records have'} an error.`,
+    url: '#animal-error',
+    linkText: 'View animal error record'
+  })
 }
 
 function buildActiveHolding(farm, dashboardMessages) {
@@ -185,7 +278,7 @@ function buildActiveHolding(farm, dashboardMessages) {
     {
       key: { text: 'CPH number' },
       value: {
-        html: `<a class="govuk-link" href="/cattle/home?cph=${encodeURIComponent(holding.id)}">${holding.id}</a>`
+        html: `<a class="govuk-link" href="/cattle/home/${holding.id}">${holding.id}</a>`
       }
     },
     {
@@ -208,8 +301,8 @@ function buildActiveHolding(farm, dashboardMessages) {
     name: holding.holdingName ?? farm.name,
     animalsUrl: holding.species.find((item) => item.url)?.url,
     errorsUrl: dashboardMessages.find((message) => message.url)?.url,
-    animalsOnHolding: [],
-    animalErrors: []
+    animalsOnHolding: SAMPLE_ANIMALS_ON_HOLDING,
+    animalErrors: SAMPLE_ANIMAL_ERRORS
   }
 }
 
@@ -232,7 +325,7 @@ function normaliseAddress(address) {
       address.country
     ].filter(Boolean)
 
-    return lines.join("<br>")
+    return lines.join('<br>')
   }
 
   return null
