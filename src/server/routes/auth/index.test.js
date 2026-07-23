@@ -156,7 +156,11 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(payload.roles).toEqual([
       'lis-role-reader',
       'lis-role-front-office',
-      'lis-role-cattle-read'
+      'lis-role-cattle-read',
+      'lis-role-cattle-register-write',
+      'lis-role-cattle-home-write',
+      'lis-role-cattle-death-write',
+      'lis-role-cattle-move-write'
     ])
     expect('permissions' in payload).toBe(false)
     expect(payload.roleAssignments).toEqual([
@@ -167,8 +171,25 @@ describe('#frontOfficeAuthRoutes', () => {
       {
         role: 'lis-role-cattle-read',
         cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-cattle-register-write',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-cattle-home-write',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-cattle-death-write',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-cattle-move-write',
+        cph: '10/081/1234'
       }
     ])
+    expect(payload.holdings).toEqual(['holding-1'])
     expect('permissionAssignments' in payload).toBe(false)
     expect(payload.authzVersion).toBe(1)
   })

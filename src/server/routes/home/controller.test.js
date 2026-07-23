@@ -220,14 +220,20 @@ describe('#frontOfficeHomeController', () => {
       'home/summary',
       expect.objectContaining({
         authenticatedUser,
-        dashboardMessages: [
+        dashboardMessages: expect.arrayContaining([
           {
             title: 'Check cattle records',
             text: 'One record needs attention.',
             url: '/cattle/home',
             linkText: 'Review cattle'
+          },
+          {
+            title: 'Animal records need attention',
+            text: '1 animal record has an error.',
+            url: '#animal-error',
+            linkText: 'View animal error record'
           }
-        ],
+        ]),
         farms: expect.arrayContaining([
           expect.objectContaining({
             name: 'My farm',
@@ -262,10 +268,65 @@ describe('#frontOfficeHomeController', () => {
           businessName: 'My Livestock Ltd',
           holdingType: 'Permanent',
           registeredKeeper: 'Test User',
-          herdMark: 'UK 123456'
+          herdMark: 'UK 123456',
+          animalsOnHolding: expect.arrayContaining([
+            [
+              { text: 'UK 123456 100001' },
+              { text: '15 January 2024' },
+              { text: '18 January 2024' },
+              { text: 'Female' },
+              { text: 'Holstein Friesian' },
+              {
+                html: '<strong class="govuk-tag govuk-tag--green">Valid</strong>'
+              }
+            ],
+            [
+              { text: 'UK 123456 100005' },
+              { text: '27 March 2024' },
+              { text: '2 April 2024' },
+              { text: 'Male' },
+              { text: 'Hereford' },
+              {
+                html: '<strong class="govuk-tag govuk-tag--red">Error</strong>'
+              }
+            ]
+          ]),
+          animalErrors: [
+            {
+              earTag: 'UK 123456 100005',
+              summaryRows: [
+                {
+                  key: { text: 'Date of birth' },
+                  value: { text: '27 March 2024' }
+                },
+                {
+                  key: { text: 'Date of registration' },
+                  value: { text: '2 April 2024' }
+                },
+                {
+                  key: { text: 'Reason for error' },
+                  value: {
+                    text: 'Ear tag number does not match the number recorded at birth notification.'
+                  }
+                }
+              ]
+            }
+          ]
         })
       })
     )
+
+    const animals = view.mock.calls[0][1].activeHolding.animalsOnHolding
+    const statuses = animals.map((row) => row.at(-1).html)
+    expect(
+      statuses.filter((status) => status.includes('>Valid<'))
+    ).toHaveLength(3)
+    expect(
+      statuses.filter((status) => status.includes('>Pending<'))
+    ).toHaveLength(1)
+    expect(
+      statuses.filter((status) => status.includes('>Error<'))
+    ).toHaveLength(1)
   })
 
   test('Should surface unavailable species summaries as dashboard messages', async () => {

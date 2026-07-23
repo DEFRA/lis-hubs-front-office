@@ -42,6 +42,9 @@
         },
         {
           text: "Breed"
+        },
+        {
+          text: "Status"
         }
       ],
       rows: activeHolding.animalsOnHolding
@@ -49,8 +52,10 @@
   {% endset -%}
 
   {% set animalErrors %}
-    {% if animalErrors.length %}
-      {% call govukInsetText() %}
+    {% if activeHolding and activeHolding.animalErrors.length %}
+      {% call govukInsetText({
+        classes: "app-inset-text--flush"
+      }) %}
         <h2 class="govuk-heading-m">
           How to rectify animal error records
         </h2>
@@ -71,6 +76,19 @@
           </li>
         </ul>
       {% endcall %}
+
+      {% for error in activeHolding.animalErrors %}
+        <div class="govuk-summary-card">
+          <div class="govuk-summary-card__title-wrapper">
+            <h2 class="govuk-summary-card__title">{{ error.earTag }}</h2>
+          </div>
+          <div class="govuk-summary-card__content">
+            {{ govukSummaryList({
+              rows: error.summaryRows
+            }) }}
+          </div>
+        </div>
+      {% endfor %}
     {% else %}
     <p class="govuk-body">There are no issues that require your attention.</p>
     {% endif %}
