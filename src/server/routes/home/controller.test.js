@@ -152,7 +152,28 @@ describe('#frontOfficeHomeController', () => {
                   registeredKeeper: 'Test User',
                   herdMark: 'UK 123456',
                   count: 7,
-                  url: '/cattle/home?cph=10%2F081%2F1234'
+                  url: '/cattle/home?cph=10%2F081%2F1234',
+                  animals: [
+                    {
+                      id: 'UK123456100001',
+                      earTag: 'UK 123456 100001',
+                      dateOfBirth: '2024-01-15',
+                      dateRegistered: '2024-01-18',
+                      sex: 'Female',
+                      breed: 'Holstein Friesian',
+                      status: 'saved'
+                    },
+                    {
+                      id: 'UK123456100005',
+                      earTag: 'UK 123456 100005',
+                      dateOfBirth: '2024-03-27',
+                      dateRegistered: '2024-04-02',
+                      sex: 'Male',
+                      breed: 'Hereford',
+                      status: 'error',
+                      errorReason: 'Ear tag did not match.'
+                    }
+                  ]
                 }
               ],
               actions: [
@@ -176,7 +197,17 @@ describe('#frontOfficeHomeController', () => {
                   cph: '10/081/1234',
                   postcode: 'MK11 1AA',
                   count: 12,
-                  url: '/sheep/home?cph=10%2F081%2F1234'
+                  url: '/sheep/home?cph=10%2F081%2F1234',
+                  animals: [
+                    {
+                      id: 'UK012345600001',
+                      earTag: 'UK 012345 600001',
+                      dateOfBirth: '2025-02-03',
+                      sex: 'Female',
+                      breed: 'Texel',
+                      status: 'pending'
+                    }
+                  ]
                 }
               ],
               actions: []
@@ -271,6 +302,7 @@ describe('#frontOfficeHomeController', () => {
           herdMark: 'UK 123456',
           animalsOnHolding: expect.arrayContaining([
             [
+              { text: 'Cattle' },
               { text: 'UK 123456 100001' },
               { text: '15 January 2024' },
               { text: '18 January 2024' },
@@ -281,6 +313,7 @@ describe('#frontOfficeHomeController', () => {
               }
             ],
             [
+              { text: 'Cattle' },
               { text: 'UK 123456 100005' },
               { text: '27 March 2024' },
               { text: '2 April 2024' },
@@ -296,6 +329,10 @@ describe('#frontOfficeHomeController', () => {
               earTag: 'UK 123456 100005',
               summaryRows: [
                 {
+                  key: { text: 'Species' },
+                  value: { text: 'Cattle' }
+                },
+                {
                   key: { text: 'Date of birth' },
                   value: { text: '27 March 2024' }
                 },
@@ -306,7 +343,7 @@ describe('#frontOfficeHomeController', () => {
                 {
                   key: { text: 'Reason for error' },
                   value: {
-                    text: 'Ear tag number does not match the number recorded at birth notification.'
+                    text: 'Ear tag did not match.'
                   }
                 }
               ]
@@ -320,13 +357,18 @@ describe('#frontOfficeHomeController', () => {
     const statuses = animals.map((row) => row.at(-1).html)
     expect(
       statuses.filter((status) => status.includes('>Valid<'))
-    ).toHaveLength(3)
+    ).toHaveLength(1)
     expect(
       statuses.filter((status) => status.includes('>Pending<'))
     ).toHaveLength(1)
     expect(
       statuses.filter((status) => status.includes('>Error<'))
     ).toHaveLength(1)
+    expect(animals.map((row) => row[0].text)).toEqual([
+      'Cattle',
+      'Cattle',
+      'Sheep'
+    ])
   })
 
   test('Should surface unavailable species summaries as dashboard messages', async () => {
