@@ -2,6 +2,7 @@
 import path from 'node:path'
 
 import hapi from '@hapi/hapi'
+import h2o2 from '@hapi/h2o2'
 import inert from '@hapi/inert'
 import Scooter from '@hapi/scooter'
 import { catchAll } from '@livestock/ui-services/errors'
@@ -19,6 +20,7 @@ import { home } from '#server/routes/home/index.js'
 import { contentSecurityPolicy } from '#server/plugins/content-security-policy.js'
 import { serveStaticFiles } from '#server/plugins/serve-static-files.js'
 import { profile } from '#server/routes/profile/index.js'
+import { proxy } from '#server/routes/proxy/index.js'
 
 const logger = getLoggerForConfig(config)
 const requestLogger = getRequestLoggerPluginForConfig(config)
@@ -64,6 +66,7 @@ export async function createServer() {
 
   await server.register([
     inert,
+    h2o2,
     Scooter,
     requestLogger,
     sessionCache,
@@ -73,7 +76,8 @@ export async function createServer() {
     auth.plugin,
     health.plugin,
     home.plugin,
-    profile.plugin
+    profile.plugin,
+    proxy.plugin
   ])
 
   server.ext('onPreResponse', catchAll)
