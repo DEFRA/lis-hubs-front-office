@@ -1,5 +1,9 @@
 @use "govuk-frontend";
 
+.app-service-navigation__item--right {
+  margin-left: auto;
+}
+
 .holding-navigation {
   border-bottom: 1px solid
     govuk-frontend.govuk-colour("black", $variant: "tint-80");
