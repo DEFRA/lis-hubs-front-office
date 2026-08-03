@@ -49,7 +49,7 @@ export const config = convict({
   serviceName: {
     doc: 'Application service name',
     format: String,
-    default: 'Livestock front office'
+    default: 'Livestock Information'
   },
   root: {
     doc: 'Project root',
