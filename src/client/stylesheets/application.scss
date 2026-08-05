@@ -1,36 +1,8 @@
 @use "govuk-frontend";
+@use "pkg:@livestock/ui-services/components/sub-navigation.css";
 
 .app-service-navigation__item--right {
   margin-left: auto;
-}
-
-.holding-navigation {
-  border-bottom: 1px solid
-    govuk-frontend.govuk-colour("black", $variant: "tint-80");
-}
-
-.holding-navigation__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 govuk-frontend.govuk-spacing(4);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.holding-navigation__item {
-  padding-bottom: govuk-frontend.govuk-spacing(2);
-}
-
-.holding-navigation__item--active {
-  margin-bottom: -1px;
-  border-bottom: 4px solid govuk-frontend.govuk-colour("blue");
-
-  .govuk-link {
-    color: govuk-frontend.govuk-colour("black");
-    font-weight: bold;
-    text-decoration: none;
-  }
 }
 
 .holding-details {
