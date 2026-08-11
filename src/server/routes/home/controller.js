@@ -1,18 +1,19 @@
 import {
   createSpokeAuthToken,
   getHubAuthSession
-} from '@livestock/hubs-infra-access/auth'
-import { getAccessibleModulesForHub } from '@livestock/hubs-infra-access'
+} from '@defra/lis-hubs-infra-access/auth'
+import { getAccessibleModulesForHub } from '@defra/lis-hubs-infra-access'
 import {
   hydrateModuleMetadata,
   MODULES,
   SPECIES
-} from '@livestock/hubs-infra-registry'
-import { getLoggerForConfig } from '@livestock/ui-services/logging'
+} from '@defra/lis-hubs-infra-registry'
+import { getLoggerForConfig } from '@defra/lis-infra-ui-services/logging'
 
 import { config } from '#config/config.js'
 
 const currentHubId = 'front-office'
+const notAvailable = 'Not available'
 
 export const homeController = {
   async handler(request, h) {
@@ -236,11 +237,11 @@ function toAnimalTableRow(animal) {
 
   return [
     { text: animal.species.label },
-    { text: animal.earTag ?? animal.id ?? 'Not available' },
+    { text: animal.earTag ?? animal.id ?? notAvailable },
     { text: formatDate(animal.dateOfBirth) },
     { text: formatDate(animal.dateRegistered) },
-    { text: animal.sex ?? 'Not available' },
-    { text: animal.breed ?? 'Not available' },
+    { text: animal.sex ?? notAvailable },
+    { text: animal.breed ?? notAvailable },
     {
       html: `<strong class="govuk-tag ${status.className}">${status.label}</strong>`
     }
@@ -269,13 +270,13 @@ function normaliseAnimalStatus(animal) {
 
 function formatDate(value) {
   if (!value) {
-    return 'Not available'
+    return notAvailable
   }
 
   const date = new Date(value)
 
   return Number.isNaN(date.getTime())
-    ? 'Not available'
+    ? notAvailable
     : new Intl.DateTimeFormat('en-GB', {
         day: 'numeric',
         month: 'long',

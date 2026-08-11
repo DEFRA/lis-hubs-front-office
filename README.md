@@ -10,10 +10,10 @@ Authentication:
 
 Expected dependencies:
 
-- `@livestock/hubs-infra-access`
-- `@livestock/hubs-infra-core`
-- `@livestock/hubs-infra-registry`
-- `@livestock/ui-services`
+- `@defra/lis-hubs-infra-access`
+- `@defra/lis-hubs-infra-core`
+- `@defra/lis-hubs-infra-registry`
+- `@defra/lis-infra-ui-services`
 
 This project is the active external hub boundary for the solution.
 
@@ -25,8 +25,34 @@ Current state:
 - `/health` responds with a simple health payload
 - static asset and favicon routes are now wired through the front-office server shell
 - content security policy is now owned by the front-office server shell
-- shared module metadata comes from `@livestock/hubs-infra-registry`
-- authentication, sessions and access decisions come from `@livestock/hubs-infra-access`
+- shared module metadata comes from `@defra/lis-hubs-infra-registry`
+- authentication, sessions and access decisions come from `@defra/lis-hubs-infra-access`
+
+## Container publishing
+
+Pull requests, short-lived branches, and merged changes on `main` run the shared
+validation workflow. After tests pass, it builds the `production` target from
+the root `Dockerfile`, verifies the container's `/health` endpoint, and uploads
+the tested image as a commit-addressed GitHub Actions artifact.
+
+Stable and prerelease Git tags trigger `.github/workflows/publish.yml`. This
+workflow validates the tag and its source branch, downloads the image artifact
+for the tagged commit, verifies its image ID and `git.hash` label, and publishes
+that exact image to Amazon ECR with two immutable tags:
+
+- the semantic version, for example `1.2.3`
+- the source revision, for example `sha-0123456789abcdef...`
+
+The repository or organisation must provide these GitHub Actions variables:
+
+- `AWS_REGION`
+- `AWS_ACCOUNT_ID`
+- `ECR_REPOSITORY`
+
+`ECR_REPOSITORY` is optional and defaults to the GitHub repository name. AWS
+must contain a `github-<image-name>-build-role` IAM role that trusts this
+repository through GitHub OIDC and can upload images to the configured ECR
+repository. No long-lived AWS access keys are required.
 
 ## OIDC callback
 
