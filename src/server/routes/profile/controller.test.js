@@ -4,8 +4,8 @@ const { fetchUserProfile } = vi.hoisted(() => ({
   fetchUserProfile: vi.fn()
 }))
 
-vi.mock('@livestock/hubs-infra-access/auth', async () => {
-  const actual = await vi.importActual('@livestock/hubs-infra-access/auth')
+vi.mock('@defra/lis-hubs-infra-access/auth', async () => {
+  const actual = await vi.importActual('@defra/lis-hubs-infra-access/auth')
 
   return {
     ...actual,
@@ -101,5 +101,32 @@ describe('#profileController', () => {
         })
       })
     )
+  })
+
+  test('Should render profiles without holdings or map coordinates', async () => {
+    const view = vi.fn(() => 'rendered')
+    const authenticatedUser = { sub: 'test-user' }
+
+    fetchUserProfile.mockResolvedValueOnce({ holdings: undefined })
+    await profileController.handler(
+      { app: { hubAuth: authenticatedUser } },
+      { view }
+    )
+    expect(view.mock.calls[0][1].userProfile).toEqual({
+      holdings: undefined,
+      user: authenticatedUser
+    })
+
+    fetchUserProfile.mockResolvedValueOnce({
+      holdings: [{ cphs: [{ longitude: 0, latitude: 54 }] }]
+    })
+    await profileController.handler(
+      { app: { hubAuth: authenticatedUser } },
+      { view }
+    )
+    expect(view.mock.calls[1][1].userProfile.holdings[0]).toMatchObject({
+      mapUrl: null,
+      cphs: [{ longitude: 0, latitude: 54, idx: 1 }]
+    })
   })
 })

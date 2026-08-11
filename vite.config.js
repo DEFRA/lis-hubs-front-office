@@ -9,7 +9,9 @@ const assetBasePath = '/public'
 function stripSlashes(value) {
   const start = value.indexOf('/') === 0 ? 1 : 0
   const end =
-    value.lastIndexOf('/') === value.length - 1 ? value.length - 1 : value.length
+    value.lastIndexOf('/') === value.length - 1
+      ? value.length - 1
+      : value.length
 
   return value.slice(start, end)
 }

@@ -1,5 +1,5 @@
 import hapi from '@hapi/hapi'
-import { verifyHubJwt } from '@livestock/hubs-infra-access/auth'
+import { verifyHubJwt } from '@defra/lis-hubs-infra-access/auth'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const {
@@ -24,8 +24,8 @@ const { clearHubAuthSession } = vi.hoisted(() => ({
   clearHubAuthSession: vi.fn()
 }))
 
-vi.mock('@livestock/hubs-infra-access/auth', async () => {
-  const actual = await vi.importActual('@livestock/hubs-infra-access/auth')
+vi.mock('@defra/lis-hubs-infra-access/auth', async () => {
+  const actual = await vi.importActual('@defra/lis-hubs-infra-access/auth')
 
   return {
     ...actual,
@@ -160,7 +160,12 @@ describe('#frontOfficeAuthRoutes', () => {
       'lis-role-cattle-register-write',
       'lis-role-cattle-home-write',
       'lis-role-cattle-death-write',
-      'lis-role-cattle-move-write'
+      'lis-role-cattle-move-write',
+      'lis-role-sheep-read',
+      'lis-role-sheep-register-write',
+      'lis-role-sheep-home-write',
+      'lis-role-sheep-death-write',
+      'lis-role-sheep-move-write'
     ])
     expect('permissions' in payload).toBe(false)
     expect(payload.roleAssignments).toEqual([
@@ -186,6 +191,26 @@ describe('#frontOfficeAuthRoutes', () => {
       },
       {
         role: 'lis-role-cattle-move-write',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-sheep-read',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-sheep-register-write',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-sheep-home-write',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-sheep-death-write',
+        cph: '10/081/1234'
+      },
+      {
+        role: 'lis-role-sheep-move-write',
         cph: '10/081/1234'
       }
     ])

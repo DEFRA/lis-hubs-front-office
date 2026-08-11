@@ -1,4 +1,4 @@
-import { createProfileService } from '@livestock/hubs-infra-access/auth'
+import { createProfileService } from '@defra/lis-hubs-infra-access/auth'
 
 import { config } from '#config/config.js'
 
