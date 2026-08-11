@@ -325,16 +325,14 @@ function normaliseAddress(address) {
   }
 
   if (address && typeof address === 'object') {
-    const lines = [
-      address.line1,
-      address.line2,
-      address.town,
-      address.county,
-      address.postcode,
-      address.country
-    ].filter(Boolean)
-
-    return lines.join('<br>')
+    return [
+      `${address.line1}<br>`,
+      `${address.line2}<br>`,
+      `${address.town}<br>`,
+      `${address.county}<br>`,
+      `${address.postcode}<br>`,
+      `${address.country}<br>`
+    ]
   }
 
   return null
@@ -362,11 +360,11 @@ function addHoldings(farmsByName, holdings, species) {
       count: holding.count,
       url: holding.url ?? species.url
     })
-    addAnimals(cph, holding.animals, species)
+    addAnimals(cph, species, holding.animals)
   }
 }
 
-function addAnimals(cph, animals = [], species) {
+function addAnimals(cph, species, animals = []) {
   for (const animal of animals) {
     const id = animal.id ?? animal.earTag
     const key = `${species.id}:${id}`
