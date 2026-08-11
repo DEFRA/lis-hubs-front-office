@@ -6,8 +6,9 @@ import h2o2 from '@hapi/h2o2'
 import inert from '@hapi/inert'
 import Scooter from '@hapi/scooter'
 import { catchAll } from '@defra/lis-infra-ui-services/errors'
-import { getLoggerForConfig } from '@defra/lis-infra-ui-services/logging'
-import { getRequestLoggerPluginForConfig } from '@defra/lis-infra-ui-services/logging'
+import {
+  getLoggerForConfig,
+  getRequestLoggerPluginForConfig } from '@defra/lis-infra-ui-services/logging'
 import { createNunjucksConfig } from '@defra/lis-infra-ui-services/nunjucks/plugin'
 import { createBasePathHelpersForConfig } from '@defra/lis-infra-ui-services/base-path'
 import { createSessionCachePluginForConfig } from '@defra/lis-infra-ui-services/session-cache'
