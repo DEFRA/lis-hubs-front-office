@@ -17,15 +17,10 @@
 
       <h2 class="govuk-heading-m govuk-!-margin-top-6">My holdings</h2>
       {% for holding in userProfile.holdings %}
-        <h3 class="govuk-heading-s">{{ holding.group_name }}</h3>
-        <ul class="govuk-list govuk-list--bullet">
-          {% for cph in holding.cphs %}
-            <li>{{ cph.idx }}. CPH: {{ cph.cph }} -- {{ cph.postcode }}</li>
-          {% endfor %}
-        </ul>
-        {% if holding.mapUrl %}
-          <img src="{{ holding.mapUrl }}" alt="Map of {{ holding.group_name }}" />
-        {% endif %}
+          <p class="govuk-body">CPH: {{ holding.countyParishHoldingNumber }}</p>
+          {% if holding.mapUrl %}
+            <img src="{{ holding.mapUrl }}" alt="Map of {{ holding.countyParishHoldingNumber }}" />
+          {% endif %}
       {% else %}
         <p class="govuk-body">No holdings are currently linked to this account.</p>
       {% endfor %}

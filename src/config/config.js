@@ -226,26 +226,20 @@ export const config = convict({
       sensitive: true
     }
   },
-  profileService: {
+  identityServiceHelper: {
     url: {
-      doc: 'Profile service endpoint used to enrich hub auth sessions',
+      doc: 'identity-service-helper endpoint used to enrich hub auth sessions',
       format: String,
       nullable: true,
       default: null,
-      env: 'PROFILE_SERVICE_URL'
+      env: 'IDENTITY_SERVICE_HELPER_URL'
     },
     apiKey: {
-      doc: 'Optional API key sent to the profile service',
+      doc: 'x-api-key value identity-service-helper requires',
       format: String,
       default: '',
-      env: 'PROFILE_SERVICE_API_KEY',
+      env: 'IDENTITY_SERVICE_HELPER_API_KEY',
       sensitive: true
-    },
-    apiKeyHeader: {
-      doc: 'Header name used when sending the profile service API key',
-      format: String,
-      default: 'x-api-key',
-      env: 'PROFILE_SERVICE_API_KEY_HEADER'
     }
   },
   auth: {
