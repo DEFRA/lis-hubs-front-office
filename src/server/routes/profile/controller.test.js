@@ -4,14 +4,9 @@ const { fetchUserProfile } = vi.hoisted(() => ({
   fetchUserProfile: vi.fn()
 }))
 
-vi.mock('@defra/lis-hubs-infra-access/auth', async () => {
-  const actual = await vi.importActual('@defra/lis-hubs-infra-access/auth')
-
-  return {
-    ...actual,
-    createProfileService: vi.fn(() => fetchUserProfile)
-  }
-})
+vi.mock('#server/common/helpers/clients.js', () => ({
+  ishClient: { fetchUserProfile }
+}))
 
 vi.mock('#config/config.js', () => ({
   config: {
@@ -49,24 +44,23 @@ describe('#profileController', () => {
       lastName: 'User',
       email: 'test.user@example.com'
     }
-    const userProfile = {
-      holdings: [
+    const profile = {
+      directAssignments: [
         {
-          group_name: 'Hill Farm',
-          cphs: [
-            {
-              cph: '12/345/6789',
-              postcode: 'AB1 2CD',
-              longitude: -3.51,
-              latitude: 54.21
-            }
-          ]
+          id: 'assignment-1',
+          countyParishHoldingId: 'cph-1',
+          countyParishHoldingNumber: '12/345/6789',
+          userId: 'test-user',
+          roleId: 'role-1',
+          roleName: 'Keeper',
+          email: 'test.user@example.com',
+          displayName: 'Test User'
         }
       ]
     }
     const view = vi.fn(() => 'rendered')
 
-    fetchUserProfile.mockResolvedValue(userProfile)
+    fetchUserProfile.mockResolvedValue(profile)
 
     const response = await profileController.handler(
       {
@@ -80,7 +74,7 @@ describe('#profileController', () => {
     )
 
     expect(response).toBe('rendered')
-    expect(fetchUserProfile).toHaveBeenCalledWith(authenticatedUser)
+    expect(fetchUserProfile).toHaveBeenCalledWith(authenticatedUser.sub)
     expect(view).toHaveBeenCalledWith(
       'profile/index',
       expect.objectContaining({
@@ -90,12 +84,9 @@ describe('#profileController', () => {
           user: authenticatedUser,
           holdings: [
             expect.objectContaining({
-              mapUrl: expect.stringContaining('api.mapbox.com'),
-              cphs: [
-                expect.objectContaining({
-                  idx: 1
-                })
-              ]
+              countyParishHoldingNumber: '12/345/6789',
+              roleName: 'Keeper',
+              mapUrl: null
             })
           ]
         })
@@ -103,30 +94,55 @@ describe('#profileController', () => {
     )
   })
 
-  test('Should render profiles without holdings or map coordinates', async () => {
+  test('Should build a mapbox mapUrl for holdings with coordinates', async () => {
+    const authenticatedUser = {
+      sub: 'test-user',
+      firstName: 'Test',
+      lastName: 'User',
+      email: 'test.user@example.com'
+    }
+    const profile = {
+      directAssignments: [
+        {
+          id: 'assignment-1',
+          countyParishHoldingId: 'cph-1',
+          countyParishHoldingNumber: '12/345/6789',
+          userId: 'test-user',
+          roleId: 'role-1',
+          roleName: 'Keeper',
+          email: 'test.user@example.com',
+          displayName: 'Test User',
+          longitude: -3.51,
+          latitude: 54.21
+        }
+      ]
+    }
     const view = vi.fn(() => 'rendered')
-    const authenticatedUser = { sub: 'test-user' }
 
-    fetchUserProfile.mockResolvedValueOnce({ holdings: undefined })
-    await profileController.handler(
-      { app: { hubAuth: authenticatedUser } },
-      { view }
-    )
-    expect(view.mock.calls[0][1].userProfile).toEqual({
-      holdings: undefined,
-      user: authenticatedUser
-    })
+    fetchUserProfile.mockResolvedValue(profile)
 
-    fetchUserProfile.mockResolvedValueOnce({
-      holdings: [{ cphs: [{ longitude: 0, latitude: 54 }] }]
-    })
     await profileController.handler(
-      { app: { hubAuth: authenticatedUser } },
-      { view }
+      {
+        app: {
+          hubAuth: authenticatedUser
+        }
+      },
+      {
+        view
+      }
     )
-    expect(view.mock.calls[1][1].userProfile.holdings[0]).toMatchObject({
-      mapUrl: null,
-      cphs: [{ longitude: 0, latitude: 54, idx: 1 }]
-    })
+
+    expect(view).toHaveBeenCalledWith(
+      'profile/index',
+      expect.objectContaining({
+        userProfile: expect.objectContaining({
+          holdings: [
+            expect.objectContaining({
+              mapUrl: expect.stringContaining('api.mapbox.com')
+            })
+          ]
+        })
+      })
+    )
   })
 })

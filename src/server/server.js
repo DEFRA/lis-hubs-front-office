@@ -5,6 +5,7 @@ import hapi from '@hapi/hapi'
 import h2o2 from '@hapi/h2o2'
 import inert from '@hapi/inert'
 import Scooter from '@hapi/scooter'
+import { requestContext } from '@defra/lis-hubs-infra-core'
 import { catchAll } from '@defra/lis-infra-ui-services/errors'
 import {
   getLoggerForConfig,
@@ -68,6 +69,7 @@ export async function createServer() {
   })
 
   await server.register([
+    requestContext.plugin,
     inert,
     h2o2,
     Scooter,

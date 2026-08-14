@@ -29,12 +29,15 @@ vi.mock('@defra/lis-hubs-infra-access/auth', async () => {
 
   return {
     ...actual,
-    createProfileService: vi.fn(() => fetchUserProfile),
     clearHubAuthSession,
     getHubAuthSession,
     setHubAuthSession
   }
 })
+
+vi.mock('#server/common/helpers/clients.js', () => ({
+  ishClient: { fetchUserProfile }
+}))
 
 vi.mock('#config/config.js', () => ({
   config: {
@@ -63,10 +66,7 @@ function createConfigValueMap() {
     'auth.hubJwt.issuer': jwtConfig.issuer,
     'auth.hubJwt.audience': jwtConfig.audience,
     'auth.hubJwt.ttlSeconds': 14400,
-    'session.cookie.secure': false,
-    'profileService.url': 'http://localhost:4000/api/profile',
-    'profileService.apiKey': '',
-    'profileService.apiKeyHeader': 'x-api-key'
+    'session.cookie.secure': false
   }
 }
 
@@ -121,10 +121,18 @@ describe('#frontOfficeAuthRoutes', () => {
       idToken: 'id-token',
       authenticatedAt: '2026-05-15T10:00:00.000Z'
     }
+    const directAssignment = {
+      id: 'assignment-1',
+      countyParishHoldingId: 'cph-1',
+      countyParishHoldingNumber: '10/081/1234',
+      userId: 'test-user',
+      roleId: 'role-1',
+      roleName: 'Keeper',
+      email: 'test.user@example.com',
+      displayName: 'Test User'
+    }
     const profile = {
-      roles: ['livestockowner'],
-      roleAssignments: [{ role: 'livestockowner', cph: '10/081/1234' }],
-      holdings: ['holding-1']
+      directAssignments: [directAssignment]
     }
 
     completeAuthorizationCodeGrant.mockResolvedValue({
@@ -145,7 +153,7 @@ describe('#frontOfficeAuthRoutes', () => {
 
     expect(response.statusCode).toBe(302)
     expect(response.headers.location).toBe('/dashboard')
-    expect(fetchUserProfile).toHaveBeenCalledWith(user, 'access-token')
+    expect(fetchUserProfile).toHaveBeenCalledWith(user.sub)
     const token = extractCookieValue(
       response.headers['set-cookie'],
       'livestock_hub_jwt'
@@ -214,7 +222,7 @@ describe('#frontOfficeAuthRoutes', () => {
         cph: '10/081/1234'
       }
     ])
-    expect(payload.holdings).toEqual(['holding-1'])
+    expect(payload.holdings).toEqual([directAssignment])
     expect('permissionAssignments' in payload).toBe(false)
     expect(payload.authzVersion).toBe(1)
   })

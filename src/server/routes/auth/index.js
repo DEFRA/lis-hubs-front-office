@@ -1,27 +1,34 @@
 import {
   createHubAuthPlugin,
   createHubCookieOptions,
-  createProfileService,
   resolveAuthorization
 } from '@defra/lis-hubs-infra-access/auth'
 
 import { config } from '#config/config.js'
+import { ishClient } from '#server/common/helpers/clients.js'
 import {
   buildAuthorizationUrl,
   buildLogoutUrl,
   completeAuthorizationCodeGrant
 } from '#server/common/helpers/auth/oidc.js'
 
-const fetchUserProfile = createProfileService({ config })
+// Only one role exists for front-office users at present, so it's granted
+// unconditionally rather than derived from identity-service-helper's per-CPH
+// roleName (e.g. "Keeper") - revisit once real role requirements exist.
+const DEFAULT_ROLE = 'cphholder'
 
-async function resolveAuthSession({ user, accessToken }) {
-  const profile = await fetchUserProfile(user, accessToken)
+async function resolveAuthSession({ user }) {
+  const profile = await ishClient.fetchUserProfile(user.sub)
+  const roleAssignments = profile.directAssignments.map((assignment) => ({
+    role: DEFAULT_ROLE,
+    cph: assignment.countyParishHoldingNumber
+  }))
 
   return resolveAuthorization({
     source: 'profile',
-    sourceRoles: profile.roles,
-    roleAssignments: profile.roleAssignments,
-    holdings: profile.holdings
+    sourceRoles: [DEFAULT_ROLE],
+    roleAssignments,
+    holdings: profile.directAssignments
   })
 }
 

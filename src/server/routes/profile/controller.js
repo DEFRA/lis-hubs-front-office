@@ -1,26 +1,15 @@
-import { createProfileService } from '@defra/lis-hubs-infra-access/auth'
-
 import { config } from '#config/config.js'
+import { ishClient } from '#server/common/helpers/clients.js'
 
-const fetchUserProfile = createProfileService({ config })
-
+// identity-service-helper has no geo data today, so this always returns null -
+// kept so a holding's mapUrl can be wired up again once coordinates exist.
 function buildHoldingMapUrl(holding) {
-  let pins = ''
-
-  for (const [index, cph] of holding.cphs.entries()) {
-    cph.idx = index + 1
-
-    if (cph.longitude && cph.latitude) {
-      pins += `pin-l-${index + 1}+b44656(${cph.longitude},${cph.latitude}),`
-    }
-  }
-
-  if (!pins) {
+  if (!holding.longitude || !holding.latitude) {
     return null
   }
 
   const mapboxApiKey = config.get('mapbox.apiKey')
-  return `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${pins.slice(0, -1)}/auto/300x200?attribution=true&logo=true&access_token=${mapboxApiKey}`
+  return `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-l-b44656(${holding.longitude},${holding.latitude})/auto/300x200?attribution=true&logo=true&access_token=${mapboxApiKey}`
 }
 
 export const profileController = {
@@ -31,10 +20,13 @@ export const profileController = {
       return h.redirect('/auth/login?returnUrl=/profile')
     }
 
-    const userProfile = await fetchUserProfile(authenticatedUser)
-    userProfile.user = authenticatedUser
+    const profile = await ishClient.fetchUserProfile(authenticatedUser.sub)
+    const userProfile = {
+      user: authenticatedUser,
+      holdings: profile.directAssignments
+    }
 
-    for (const holding of userProfile.holdings ?? []) {
+    for (const holding of userProfile.holdings) {
       holding.mapUrl = buildHoldingMapUrl(holding)
     }
 
