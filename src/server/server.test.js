@@ -1,11 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 
-vi.mock('#server/common/helpers/auth/oidc.js', () => ({
-  buildAuthorizationUrl: vi.fn(),
-  buildLogoutUrl: vi.fn(),
-  completeAuthorizationCodeGrant: vi.fn(),
-  getOidcMetadata: vi.fn()
-}))
+vi.mock('@defra/lis-hubs-infra-access/auth', async () => {
+  const actual = await vi.importActual('@defra/lis-hubs-infra-access/auth')
+
+  return {
+    ...actual,
+    createHubAuthPlugin: vi.fn(async () => ({
+      plugin: { name: 'auth', register: () => undefined }
+    }))
+  }
+})
 
 describe('#frontOfficeServer', () => {
   const originalLogFormat = process.env.LOG_FORMAT

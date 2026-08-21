@@ -6,11 +6,15 @@ import {
 
 import { config } from '#config/config.js'
 import { ishClient } from '#server/common/helpers/clients.js'
-import {
-  buildAuthorizationUrl,
-  buildLogoutUrl,
-  completeAuthorizationCodeGrant
-} from '#server/common/helpers/auth/oidc.js'
+import { mapUser } from '#server/common/helpers/auth/map-user.js'
+
+const provider = {
+  discoveryUrl: config.get('auth.oidc.discoveryUrl'),
+  clientId: config.get('auth.oidc.clientId'),
+  clientSecret: config.get('auth.oidc.clientSecret'),
+  redirectPath: config.get('auth.oidc.redirectPath'),
+  serviceId: config.get('auth.oidc.serviceId')
+}
 
 // Only one role exists for front-office users at present, so it's granted
 // unconditionally rather than derived from identity-service-helper's per-CPH
@@ -52,13 +56,13 @@ function getHubJwtConfig() {
   }
 }
 
-export const auth = createHubAuthPlugin({
+export const auth = await createHubAuthPlugin({
   getHubJwtCookieName,
   getCookieOptions,
   getHubJwtConfig,
   resolveAuthSession,
-  buildAuthorizationUrl,
-  completeAuthorizationCodeGrant,
-  buildLogoutUrl,
+  provider,
+  hubOrigin: config.get('auth.hubOrigin'),
+  mapUser,
   loginPath: '/auth/login'
 })
