@@ -60,5 +60,5 @@ export const auth = createHubAuthPlugin({
   buildAuthorizationUrl,
   completeAuthorizationCodeGrant,
   buildLogoutUrl,
-  loginRoutes: [{ path: '/auth/login' }]
+  loginPath: '/auth/login'
 })

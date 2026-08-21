@@ -2,14 +2,12 @@ import { createOidcClient } from '@defra/lis-hubs-infra-access/auth'
 
 import { config } from '#config/config.js'
 
-function getProviderConfig() {
-  return {
-    discoveryUrl: config.get('auth.oidc.discoveryUrl'),
-    clientId: config.get('auth.oidc.clientId'),
-    clientSecret: config.get('auth.oidc.clientSecret'),
-    redirectPath: config.get('auth.oidc.redirectPath'),
-    serviceId: config.get('auth.oidc.serviceId')
-  }
+const provider = {
+  discoveryUrl: config.get('auth.oidc.discoveryUrl'),
+  clientId: config.get('auth.oidc.clientId'),
+  clientSecret: config.get('auth.oidc.clientSecret'),
+  redirectPath: config.get('auth.oidc.redirectPath'),
+  serviceId: config.get('auth.oidc.serviceId')
 }
 
 function mapUser(payload) {
@@ -30,9 +28,8 @@ export const {
   buildLogoutUrl,
   completeAuthorizationCodeGrant,
   getOidcMetadata
-} = createOidcClient({
-  getProviderConfig,
-  getHubOrigin: () => config.get('auth.hubOrigin'),
-  getPrimaryProviderId: () => 'defra-ci',
+} = await createOidcClient({
+  provider,
+  hubOrigin: config.get('auth.hubOrigin'),
   mapUser
 })

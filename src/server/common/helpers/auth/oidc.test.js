@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test, vi } from 'vitest'
 
 const { configGet, createOidcClient } = vi.hoisted(() => ({
   configGet: vi.fn((path) => `configured:${path}`),
-  createOidcClient: vi.fn(() => ({
+  createOidcClient: vi.fn(async () => ({
     buildAuthorizationUrl: vi.fn(),
     buildLogoutUrl: vi.fn(),
     completeAuthorizationCodeGrant: vi.fn(),
@@ -22,15 +22,14 @@ describe('#oidc', () => {
   })
 
   test('Should configure the Defra CI provider from application config', () => {
-    expect(options.getProviderConfig()).toEqual({
+    expect(options.provider).toEqual({
       discoveryUrl: 'configured:auth.oidc.discoveryUrl',
       clientId: 'configured:auth.oidc.clientId',
       clientSecret: 'configured:auth.oidc.clientSecret',
       redirectPath: 'configured:auth.oidc.redirectPath',
       serviceId: 'configured:auth.oidc.serviceId'
     })
-    expect(options.getHubOrigin()).toBe('configured:auth.hubOrigin')
-    expect(options.getPrimaryProviderId()).toBe('defra-ci')
+    expect(options.hubOrigin).toBe('configured:auth.hubOrigin')
   })
 
   test('Should map a complete identity payload', () => {

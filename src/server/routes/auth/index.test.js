@@ -244,10 +244,7 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(response.headers.location).toBe(
       'https://defra-ci.example.test/login'
     )
-    expect(buildAuthorizationUrl).toHaveBeenCalledWith(
-      expect.any(Object),
-      undefined
-    )
+    expect(buildAuthorizationUrl).toHaveBeenCalledWith(expect.any(Object))
   })
 
   test('Should return a service unavailable response when OIDC login configuration is invalid', async () => {
