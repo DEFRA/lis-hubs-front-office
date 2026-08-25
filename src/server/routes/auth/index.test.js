@@ -163,8 +163,7 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(payload.sub).toBe(user.sub)
     expect(payload.statements).toEqual([
       { role: 'lis-role-reader', cphs: '*' },
-      { role: 'lis-role-keeper', cphs: '*' },
-      { role: 'lis-role-keeper', cphs: ['10/081/1234'] }
+      { role: 'lis-role-keeper', cphs: '*' }
     ])
     expect('roles' in payload).toBe(false)
     expect('permissions' in payload).toBe(false)
