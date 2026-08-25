@@ -45,7 +45,7 @@
     "@hapi/hapi": "21.4.10",
     "@hapi/inert": "7.1.2",
     "@hapi/scooter": "8.0.0",
-    "@defra/lis-hubs-infra-access": "^0.2.0",
+    "@defra/lis-hubs-infra-access": "^0.6.0",
     "@defra/lis-hubs-infra-core": "^0.2.0",
     "@defra/lis-hubs-infra-registry": "^0.2.0",
     "@defra/lis-infra-ui-services": "^0.1.0",
