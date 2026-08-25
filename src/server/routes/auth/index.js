@@ -1,6 +1,7 @@
 import {
   createHubAuthPlugin,
   createHubCookieOptions,
+  GLOBAL_CPH_SCOPE,
   resolveAuthorization
 } from '@defra/lis-hubs-infra-access/auth'
 
@@ -19,15 +20,10 @@ const DEFAULT_ROLE = 'cphholder'
 
 async function resolveAuthSession({ user }) {
   const profile = await ishClient.fetchUserProfile(user.sub)
-  const roleAssignments = profile.directAssignments.map((assignment) => ({
-    role: DEFAULT_ROLE,
-    cph: assignment.countyParishHoldingNumber
-  }))
 
   return resolveAuthorization({
     source: 'profile',
-    sourceRoles: [DEFAULT_ROLE],
-    roleAssignments,
+    holdingRoles: [{ role: DEFAULT_ROLE, cph: GLOBAL_CPH_SCOPE }],
     holdings: profile.directAssignments
   })
 }
