@@ -161,69 +161,16 @@ describe('#frontOfficeAuthRoutes', () => {
     const payload = await verifyHubJwt(token, jwtConfig)
 
     expect(payload.sub).toBe(user.sub)
-    expect(payload.roles).toEqual([
-      'lis-role-reader',
-      'lis-role-front-office',
-      'lis-role-cattle-read',
-      'lis-role-cattle-register-write',
-      'lis-role-cattle-home-write',
-      'lis-role-cattle-death-write',
-      'lis-role-cattle-move-write',
-      'lis-role-sheep-read',
-      'lis-role-sheep-register-write',
-      'lis-role-sheep-home-write',
-      'lis-role-sheep-death-write',
-      'lis-role-sheep-move-write'
+    expect(payload.statements).toEqual([
+      { role: 'lis-role-reader', cphs: '*' },
+      { role: 'lis-role-keeper', cphs: '*' },
+      { role: 'lis-role-keeper', cphs: ['10/081/1234'] }
     ])
+    expect('roles' in payload).toBe(false)
     expect('permissions' in payload).toBe(false)
-    expect(payload.roleAssignments).toEqual([
-      {
-        role: 'lis-role-front-office',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-cattle-read',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-cattle-register-write',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-cattle-home-write',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-cattle-death-write',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-cattle-move-write',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-sheep-read',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-sheep-register-write',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-sheep-home-write',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-sheep-death-write',
-        cph: '10/081/1234'
-      },
-      {
-        role: 'lis-role-sheep-move-write',
-        cph: '10/081/1234'
-      }
-    ])
-    expect(payload.holdings).toEqual([directAssignment])
+    expect('roleAssignments' in payload).toBe(false)
     expect('permissionAssignments' in payload).toBe(false)
+    expect(payload.holdings).toEqual([directAssignment])
     expect(payload.authzVersion).toBe(1)
   })
 
