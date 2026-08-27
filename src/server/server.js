@@ -4,12 +4,12 @@ import path from 'node:path'
 import hapi from '@hapi/hapi'
 import inert from '@hapi/inert'
 import Scooter from '@hapi/scooter'
-import { createProxyPlugin, requestContext } from '@defra/lis-hubs-infra-core'
-import { catchAll } from '@defra/lis-infra-ui-services/errors'
 import {
-  getLoggerForConfig,
-  getRequestLoggerPluginForConfig
-} from '@defra/lis-infra-ui-services/logging'
+  createProxyPlugin,
+  logger,
+  requestContext
+} from '@defra/lis-hubs-infra-core'
+import { catchAll } from '@defra/lis-infra-ui-services/errors'
 import { createNunjucksConfig } from '@defra/lis-infra-ui-services/nunjucks/plugin'
 import { createBasePathHelpersForConfig } from '@defra/lis-infra-ui-services/base-path'
 import { createSessionCachePluginForConfig } from '@defra/lis-infra-ui-services/session-cache'
@@ -25,8 +25,15 @@ import { contentSecurityPolicy } from '#server/plugins/content-security-policy.j
 import { serveStaticFiles } from '#server/plugins/serve-static-files.js'
 import { profile } from '#server/routes/profile/index.js'
 
-const logger = getLoggerForConfig(config)
-const requestLogger = getRequestLoggerPluginForConfig(config)
+logger.level = config.get('log.level')
+logger.enabled = config.get('log.enabled')
+logger.format =
+  config.get('log.format') === 'pino-pretty'
+    ? 'pretty-print'
+    : config.get('log.format')
+logger.serviceName = 'lis-hubs-front-office'
+logger.serviceVersion = config.get('serviceVersion')
+const requestLogger = logger.hapiPlugin
 const sessionCache = createSessionCachePluginForConfig(config)
 const proxy = createProxyPlugin({
   hubId: 'front-office',
