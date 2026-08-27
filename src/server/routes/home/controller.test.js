@@ -72,8 +72,8 @@ vi.mock('@defra/lis-hubs-infra-access/auth', () => ({
   getHubAuthSession
 }))
 
-vi.mock('@defra/lis-infra-ui-services/logging', () => ({
-  getLoggerForConfig: vi.fn(() => logger)
+vi.mock('@defra/lis-hubs-infra-core', () => ({
+  logger
 }))
 
 vi.mock('#config/config.js', () => ({

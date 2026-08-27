@@ -8,7 +8,7 @@ import {
   MODULES,
   SPECIES
 } from '@defra/lis-hubs-infra-registry'
-import { getLoggerForConfig } from '@defra/lis-infra-ui-services/logging'
+import { logger } from '@defra/lis-hubs-infra-core'
 
 import { config } from '#config/config.js'
 
@@ -92,7 +92,6 @@ function getSpokeAuthConfig() {
 }
 
 async function loadSpokeSummaryData(spoke, authenticatedUser, traceId) {
-  const logger = getLoggerForConfig(config)
   const spokeUrl = buildSummaryUrl(spoke)
   const headers = {
     Accept: 'application/json',
