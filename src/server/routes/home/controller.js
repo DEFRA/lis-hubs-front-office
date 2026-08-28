@@ -8,7 +8,7 @@ import {
   MODULES,
   SPECIES
 } from '@defra/lis-hubs-infra-registry'
-import { logger } from '@defra/lis-hubs-infra-core'
+import { logger, requestContext } from '@defra/lis-hubs-infra-core'
 
 import { config } from '#config/config.js'
 
@@ -20,14 +20,11 @@ export const homeController = {
     const viewModel = buildHomeViewModel(request)
 
     if (viewModel.authenticatedUser) {
-      const traceId = request.headers?.[config.get('tracing.header')]
-
       await Promise.all(
         viewModel.spokes.map(async (spoke) => {
           spoke.summary = await loadSpokeSummaryData(
             spoke,
-            viewModel.authenticatedUser,
-            traceId
+            viewModel.authenticatedUser
           )
         })
       )
@@ -91,7 +88,7 @@ function getSpokeAuthConfig() {
   }
 }
 
-async function loadSpokeSummaryData(spoke, authenticatedUser, traceId) {
+async function loadSpokeSummaryData(spoke, authenticatedUser) {
   const spokeUrl = buildSummaryUrl(spoke)
   const headers = {
     Accept: 'application/json',
@@ -102,12 +99,10 @@ async function loadSpokeSummaryData(spoke, authenticatedUser, traceId) {
         user: authenticatedUser
       },
       getSpokeAuthConfig()
-    )
+    ),
+    ...requestContext.getHeaders()
   }
 
-  if (traceId) {
-    headers[config.get('tracing.header')] = traceId
-  }
   const response = await fetch(spokeUrl, {
     method: 'GET',
     headers
