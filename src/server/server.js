@@ -25,14 +25,17 @@ import { contentSecurityPolicy } from '#server/plugins/content-security-policy.j
 import { serveStaticFiles } from '#server/plugins/serve-static-files.js'
 import { profile } from '#server/routes/profile/index.js'
 
+const serviceName = 'lis-hubs-front-office'
+
 logger.level = config.get('log.level')
 logger.enabled = config.get('log.enabled')
 logger.format =
-  config.get('log.format') === 'pino-pretty'
+  config.get('log.format') === 'pretty'
     ? 'pretty-print'
     : config.get('log.format')
-logger.serviceName = 'lis-hubs-front-office'
+logger.serviceName = serviceName
 logger.serviceVersion = config.get('serviceVersion')
+logger.context.hashSecret = config.get('log.hashSecret')
 const requestLogger = logger.hapiPlugin
 const sessionCache = createSessionCachePluginForConfig(config)
 const proxy = createProxyPlugin({

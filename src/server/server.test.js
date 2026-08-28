@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  test,
+  vi
+} from 'vitest'
 
 describe('#frontOfficeServer', () => {
   const originalLogFormat = process.env.LOG_FORMAT
@@ -6,7 +14,7 @@ describe('#frontOfficeServer', () => {
   let server
 
   beforeAll(async () => {
-    process.env.LOG_FORMAT = 'pino-pretty'
+    process.env.LOG_FORMAT = 'pretty'
     ;({ createServer } = await import('./server.js'))
     server = await createServer()
     await server.initialize()
@@ -136,5 +144,37 @@ describe('#frontOfficeServer', () => {
     )
     expect(result).toContain('How to rectify animal error records')
     expect(result).toContain('class="govuk-inset-text app-inset-text--flush"')
+  })
+})
+
+describe('log format mapping', () => {
+  afterEach(() => {
+    delete process.env.LOG_FORMAT
+  })
+
+  test('server.js maps LOG_FORMAT=pretty onto the logger pretty-print format', async () => {
+    // Arrange
+    process.env.LOG_FORMAT = 'pretty'
+    vi.resetModules()
+
+    // Act
+    const { logger } = await import('@defra/lis-hubs-infra-core')
+    await import('./server.js')
+
+    // Assert
+    expect(logger.format).toBe('pretty-print')
+  })
+
+  test('server.js passes any other LOG_FORMAT value through to the logger unchanged', async () => {
+    // Arrange
+    process.env.LOG_FORMAT = 'ecs'
+    vi.resetModules()
+
+    // Act
+    const { logger } = await import('@defra/lis-hubs-infra-core')
+    await import('./server.js')
+
+    // Assert
+    expect(logger.format).toBe('ecs')
   })
 })

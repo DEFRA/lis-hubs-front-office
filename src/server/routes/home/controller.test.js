@@ -5,14 +5,14 @@ const {
   getAccessibleModulesForHub,
   getHubAuthSession,
   logger,
+  requestContext,
   moduleDefinitions
 } = vi.hoisted(() => ({
   createSpokeAuthToken: vi.fn(),
   getAccessibleModulesForHub: vi.fn(),
   getHubAuthSession: vi.fn(),
-  logger: {
-    error: vi.fn()
-  },
+  logger: { error: vi.fn() },
+  requestContext: { getHeaders: vi.fn(() => ({})) },
   moduleDefinitions: [
     {
       id: 'cattle-home',
@@ -40,8 +40,7 @@ const configValues = {
   'auth.hubJwt.issuer': 'http://localhost:3101',
   'auth.hubJwt.audience': 'livestock-spokes',
   'auth.hubJwt.ttlSeconds': 14400,
-  'auth.hubOrigin': 'http://localhost:3101',
-  'tracing.header': 'x-cdp-request-id'
+  'auth.hubOrigin': 'http://localhost:3101'
 }
 
 vi.mock('@defra/lis-hubs-infra-access', () => ({
@@ -73,7 +72,8 @@ vi.mock('@defra/lis-hubs-infra-access/auth', () => ({
 }))
 
 vi.mock('@defra/lis-hubs-infra-core', () => ({
-  logger
+  logger,
+  requestContext
 }))
 
 vi.mock('#config/config.js', () => ({
@@ -87,6 +87,7 @@ import { homeController } from './controller.js'
 describe('#frontOfficeHomeController', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    requestContext.getHeaders.mockReturnValue({})
     global.fetch = vi.fn()
   })
 
@@ -122,6 +123,9 @@ describe('#frontOfficeHomeController', () => {
       lastName: 'User'
     }
     const view = vi.fn(() => 'rendered')
+    requestContext.getHeaders.mockReturnValue({
+      'x-cdp-request-id': 'trace-123'
+    })
 
     getHubAuthSession.mockReturnValue(authenticatedUser)
     getAccessibleModulesForHub.mockReturnValue(moduleDefinitions)
@@ -216,7 +220,7 @@ describe('#frontOfficeHomeController', () => {
     }))
 
     const response = await homeController.handler(
-      { headers: { 'x-cdp-request-id': 'trace-123' } },
+      {},
       {
         view
       }
