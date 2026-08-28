@@ -1,4 +1,8 @@
 import { createOidcClient } from '@defra/lis-hubs-infra-access/auth'
+import {
+  derivePseudonymousUserId,
+  requestContext
+} from '@defra/lis-hubs-infra-core'
 
 import { config } from '#config/config.js'
 
@@ -13,6 +17,15 @@ function getProviderConfig() {
 }
 
 function mapUser(payload) {
+  const userId = derivePseudonymousUserId(
+    payload.email,
+    config.get('auth.userIdHashSecret')
+  )
+
+  if (userId) {
+    requestContext.set('user_id', userId)
+  }
+
   return {
     sub: payload.sub,
     email: payload.email ?? '',
@@ -21,7 +34,8 @@ function mapUser(payload) {
     serviceId: payload.serviceId ?? config.get('auth.oidc.serviceId'),
     roles: Array.isArray(payload.roles) ? payload.roles : [],
     loa: payload.loa ?? '',
-    amr: Array.isArray(payload.amr) ? payload.amr : []
+    amr: Array.isArray(payload.amr) ? payload.amr : [],
+    user_id: userId
   }
 }
 
