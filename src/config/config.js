@@ -24,7 +24,15 @@ export const config = convict({
   },
   environment: {
     doc: 'The current environment',
-    format: ['local', 'docker_compose', 'dev', 'test', 'perf-test', 'prod'],
+    format: [
+      'local',
+      'docker_compose',
+      'dev',
+      'test',
+      'ext-test',
+      'perf-test',
+      'prod'
+    ],
     default: 'local',
     env: 'ENVIRONMENT'
   },
