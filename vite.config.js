@@ -63,6 +63,9 @@ export default defineConfig(({ mode }) => {
       hmr: {
         port: 0
       }
+    },
+    test: {
+      include: ['src/**/*.test.js']
     }
   }
 })

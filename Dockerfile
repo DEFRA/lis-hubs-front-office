@@ -14,7 +14,7 @@ ENV PORT=${PORT}
 EXPOSE ${PORT} ${PORT_DEBUG}
 
 # A local .npmrc can provide registry configuration without being required in CI.
-COPY --chown=node:node --chmod=755 package*.json .npmrc* ./
+COPY --chown=node:node --chmod=755 package*.json ./
 RUN npm ci
 COPY --chown=node:node --chmod=755 . .
 RUN npm run build:frontend
