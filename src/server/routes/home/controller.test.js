@@ -3,15 +3,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 const {
   createSpokeAuthToken,
   getAccessibleModulesForHub,
-  getHubAuthSession,
   logger,
   requestContext,
   moduleDefinitions
 } = vi.hoisted(() => ({
   createSpokeAuthToken: vi.fn(),
   getAccessibleModulesForHub: vi.fn(),
-  getHubAuthSession: vi.fn(),
-  logger: { error: vi.fn() },
+  logger: { error: vi.fn(), info: vi.fn() },
   requestContext: { getHeaders: vi.fn(() => ({})) },
   moduleDefinitions: [
     {
@@ -67,8 +65,7 @@ vi.mock('@defra/lis-hubs-infra-registry', () => ({
 }))
 
 vi.mock('@defra/lis-hubs-infra-access/auth', () => ({
-  createSpokeAuthToken,
-  getHubAuthSession
+  createSpokeAuthToken
 }))
 
 vi.mock('@defra/lis-hubs-infra-core', () => ({
@@ -94,7 +91,6 @@ describe('#frontOfficeHomeController', () => {
   test('Should render the welcome view for unauthenticated users', async () => {
     const view = vi.fn(() => 'rendered')
 
-    getHubAuthSession.mockReturnValue(null)
     getAccessibleModulesForHub.mockReturnValue([])
 
     const response = await homeController.handler(
@@ -120,14 +116,20 @@ describe('#frontOfficeHomeController', () => {
     const authenticatedUser = {
       sub: 'user-1',
       firstName: 'Test',
-      lastName: 'User'
+      lastName: 'User',
+      statements: [
+        {
+          role: 'lis-role-keeper',
+          cphs: '*',
+          permissions: ['lis-perm-front-office', 'lis-perm-cattle-read']
+        }
+      ]
     }
     const view = vi.fn(() => 'rendered')
     requestContext.getHeaders.mockReturnValue({
       'x-cdp-request-id': 'trace-123'
     })
 
-    getHubAuthSession.mockReturnValue(authenticatedUser)
     getAccessibleModulesForHub.mockReturnValue(moduleDefinitions)
     createSpokeAuthToken.mockResolvedValue('Bearer token')
     global.fetch.mockImplementation(async (url) => ({
@@ -220,7 +222,7 @@ describe('#frontOfficeHomeController', () => {
     }))
 
     const response = await homeController.handler(
-      {},
+      { app: { hubAuth: authenticatedUser } },
       {
         view
       }
@@ -228,7 +230,13 @@ describe('#frontOfficeHomeController', () => {
 
     expect(response).toBe('rendered')
     expect(getAccessibleModulesForHub).toHaveBeenCalledWith(
-      expect.objectContaining({ taxonomy: 'home' })
+      expect.objectContaining({ taxonomy: 'home', user: authenticatedUser })
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      'Building front-office dashboard [userId=user-1 | spokes=cattle-home,sheep-home]'
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      'Fetched spoke summary [spokeId=cattle-home]'
     )
     expect(createSpokeAuthToken).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -383,7 +391,6 @@ describe('#frontOfficeHomeController', () => {
     }
     const view = vi.fn(() => 'rendered')
 
-    getHubAuthSession.mockReturnValue(authenticatedUser)
     getAccessibleModulesForHub.mockReturnValue([moduleDefinitions[0]])
     createSpokeAuthToken.mockResolvedValue('Bearer token')
     global.fetch.mockResolvedValue({
@@ -392,7 +399,10 @@ describe('#frontOfficeHomeController', () => {
       statusText: 'Service Unavailable'
     })
 
-    await homeController.handler({ headers: {} }, { view })
+    await homeController.handler(
+      { app: { hubAuth: authenticatedUser }, headers: {} },
+      { view }
+    )
 
     expect(view).toHaveBeenCalledWith(
       'home/summary',
@@ -415,7 +425,6 @@ describe('#frontOfficeHomeController', () => {
     const view = vi.fn(() => 'rendered')
     const spoke = { ...moduleDefinitions[0], path: '/cattle/home/' }
 
-    getHubAuthSession.mockReturnValue({ sub: 'user-1' })
     getAccessibleModulesForHub.mockReturnValue([spoke])
     createSpokeAuthToken.mockResolvedValue('Bearer token')
     global.fetch.mockResolvedValue({
@@ -451,7 +460,10 @@ describe('#frontOfficeHomeController', () => {
       })
     })
 
-    await homeController.handler({ headers: {} }, { view })
+    await homeController.handler(
+      { app: { hubAuth: { sub: 'user-1' } }, headers: {} },
+      { view }
+    )
 
     expect(global.fetch).toHaveBeenCalledWith(
       'http://localhost:3101/cattle/home/summary-data',
@@ -510,7 +522,6 @@ describe('#frontOfficeHomeController', () => {
   ])('Should normalise a %s holding address', async (address, expected) => {
     const view = vi.fn(() => 'rendered')
 
-    getHubAuthSession.mockReturnValue({ sub: 'user-1' })
     getAccessibleModulesForHub.mockReturnValue([moduleDefinitions[0]])
     createSpokeAuthToken.mockResolvedValue('Bearer token')
     global.fetch.mockResolvedValue({
@@ -520,7 +531,10 @@ describe('#frontOfficeHomeController', () => {
       })
     })
 
-    await homeController.handler({ headers: {} }, { view })
+    await homeController.handler(
+      { app: { hubAuth: { sub: 'user-1' } }, headers: {} },
+      { view }
+    )
 
     expect(view.mock.calls[0][1].activeHolding.summaryRows[3].lines).toEqual(
       expected
