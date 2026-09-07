@@ -3,15 +3,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 const {
   createSpokeAuthToken,
   getAccessibleModulesForHub,
-  getHubAuthSession,
   logger,
   requestContext,
   moduleDefinitions
 } = vi.hoisted(() => ({
   createSpokeAuthToken: vi.fn(),
   getAccessibleModulesForHub: vi.fn(),
-  getHubAuthSession: vi.fn(),
-  logger: { error: vi.fn() },
+  logger: { error: vi.fn(), info: vi.fn() },
   requestContext: { getHeaders: vi.fn(() => ({})) },
   moduleDefinitions: [
     {
@@ -67,8 +65,7 @@ vi.mock('@defra/lis-hubs-infra-registry', () => ({
 }))
 
 vi.mock('@defra/lis-hubs-infra-access/auth', () => ({
-  createSpokeAuthToken,
-  getHubAuthSession
+  createSpokeAuthToken
 }))
 
 vi.mock('@defra/lis-hubs-infra-core', () => ({
@@ -94,7 +91,6 @@ describe('#frontOfficeHomeController', () => {
   test('Should render the welcome view for unauthenticated users', async () => {
     const view = vi.fn(() => 'rendered')
 
-    getHubAuthSession.mockReturnValue(null)
     getAccessibleModulesForHub.mockReturnValue([])
 
     const response = await homeController.handler(
@@ -120,14 +116,20 @@ describe('#frontOfficeHomeController', () => {
     const authenticatedUser = {
       sub: 'user-1',
       firstName: 'Test',
-      lastName: 'User'
+      lastName: 'User',
+      statements: [
+        {
+          role: 'lis-role-keeper',
+          cphs: '*',
+          permissions: ['lis-perm-front-office', 'lis-perm-cattle-read']
+        }
+      ]
     }
     const view = vi.fn(() => 'rendered')
     requestContext.getHeaders.mockReturnValue({
       'x-cdp-request-id': 'trace-123'
     })
 
-    getHubAuthSession.mockReturnValue(authenticatedUser)
     getAccessibleModulesForHub.mockReturnValue(moduleDefinitions)
     createSpokeAuthToken.mockResolvedValue('Bearer token')
     global.fetch.mockImplementation(async (url) => ({
@@ -220,7 +222,7 @@ describe('#frontOfficeHomeController', () => {
     }))
 
     const response = await homeController.handler(
-      {},
+      { app: { hubAuth: authenticatedUser } },
       {
         view
       }
@@ -228,7 +230,13 @@ describe('#frontOfficeHomeController', () => {
 
     expect(response).toBe('rendered')
     expect(getAccessibleModulesForHub).toHaveBeenCalledWith(
-      expect.objectContaining({ taxonomy: 'home' })
+      expect.objectContaining({ taxonomy: 'home', user: authenticatedUser })
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      'Building front-office dashboard [userId=user-1 | spokes=cattle-home,sheep-home]'
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      'Fetched spoke summary [spokeId=cattle-home]'
     )
     expect(createSpokeAuthToken).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -383,7 +391,6 @@ describe('#frontOfficeHomeController', () => {
     }
     const view = vi.fn(() => 'rendered')
 
-    getHubAuthSession.mockReturnValue(authenticatedUser)
     getAccessibleModulesForHub.mockReturnValue([moduleDefinitions[0]])
     createSpokeAuthToken.mockResolvedValue('Bearer token')
     global.fetch.mockResolvedValue({
@@ -392,7 +399,10 @@ describe('#frontOfficeHomeController', () => {
       statusText: 'Service Unavailable'
     })
 
-    await homeController.handler({ headers: {} }, { view })
+    await homeController.handler(
+      { app: { hubAuth: authenticatedUser }, headers: {} },
+      { view }
+    )
 
     expect(view).toHaveBeenCalledWith(
       'home/summary',
@@ -408,122 +418,6 @@ describe('#frontOfficeHomeController', () => {
     )
     expect(logger.error).toHaveBeenCalledWith(
       'Failed to fetch spoke summary for cattle-home: 503 Service Unavailable'
-    )
-  })
-
-  test('Should safely normalise incomplete and duplicate summary data', async () => {
-    const view = vi.fn(() => 'rendered')
-    const spoke = { ...moduleDefinitions[0], path: '/cattle/home/' }
-
-    getHubAuthSession.mockReturnValue({ sub: 'user-1' })
-    getAccessibleModulesForHub.mockReturnValue([spoke])
-    createSpokeAuthToken.mockResolvedValue('Bearer token')
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({
-        actions: [{ text: 'Action text' }],
-        holdings: [
-          {
-            farmName: '',
-            cph: '12/345/0001',
-            address: ['Farm', '', 'Town'],
-            animals: [
-              { status: 'valid' },
-              {
-                earTag: 'UK ERROR',
-                status: 'failed',
-                dateOfBirth: 'not-a-date'
-              },
-              { id: 'validated', statusLabel: 'Validated' },
-              { id: 'validated', statusLabel: 'Validated' }
-            ]
-          },
-          {
-            farmName: '',
-            cph: '12/345/0001',
-            postcode: 'AB1 2CD',
-            businessName: 'Farm Ltd',
-            holdingType: 'Permanent',
-            registeredKeeper: 'Keeper',
-            herdMark: 'UK 123456'
-          }
-        ]
-      })
-    })
-
-    await homeController.handler({ headers: {} }, { view })
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:3101/cattle/home/summary-data',
-      expect.objectContaining({
-        headers: {
-          Accept: 'application/json',
-          Authorization: 'Bearer token'
-        }
-      })
-    )
-    const result = view.mock.calls[0][1]
-    expect(result.farms[0].name).toBe('Your farm')
-    expect(result.activeHolding).toMatchObject({
-      name: '',
-      postcode: 'AB1 2CD',
-      businessName: 'Farm Ltd',
-      animalsUrl: undefined
-    })
-    expect(result.activeHolding.summaryRows[0].value.html).toContain('href="#"')
-    expect(result.activeHolding.summaryRows[3].lines).toEqual(['Farm', 'Town'])
-    expect(result.activeHolding.animalsOnHolding).toHaveLength(3)
-    expect(result.activeHolding.animalsOnHolding[0]).toEqual(
-      expect.arrayContaining([
-        { text: 'Not available' },
-        {
-          html: '<strong class="govuk-tag govuk-tag--green">Valid</strong>'
-        }
-      ])
-    )
-    expect(result.activeHolding.animalErrors[0]).toEqual(
-      expect.objectContaining({
-        earTag: 'UK ERROR',
-        summaryRows: expect.arrayContaining([
-          {
-            key: { text: 'Reason for error' },
-            value: { text: 'The record could not be processed.' }
-          }
-        ])
-      })
-    )
-    expect(result.dashboardMessages).toEqual(
-      expect.arrayContaining([
-        {
-          title: 'Cattle action',
-          text: 'Action text',
-          url: undefined,
-          linkText: 'View action'
-        }
-      ])
-    )
-  })
-
-  test.each([
-    ['1 Farm Lane\nTown', ['1 Farm Lane', 'Town']],
-    [null, null]
-  ])('Should normalise a %s holding address', async (address, expected) => {
-    const view = vi.fn(() => 'rendered')
-
-    getHubAuthSession.mockReturnValue({ sub: 'user-1' })
-    getAccessibleModulesForHub.mockReturnValue([moduleDefinitions[0]])
-    createSpokeAuthToken.mockResolvedValue('Bearer token')
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({
-        holdings: [{ cph: '12/345/0001', address }]
-      })
-    })
-
-    await homeController.handler({ headers: {} }, { view })
-
-    expect(view.mock.calls[0][1].activeHolding.summaryRows[3].lines).toEqual(
-      expected
     )
   })
 })

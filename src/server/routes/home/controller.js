@@ -1,7 +1,4 @@
-import {
-  createSpokeAuthToken,
-  getHubAuthSession
-} from '@defra/lis-hubs-infra-access/auth'
+import { createSpokeAuthToken } from '@defra/lis-hubs-infra-access/auth'
 import { getAccessibleModulesForHub } from '@defra/lis-hubs-infra-access'
 import {
   hydrateModuleMetadata,
@@ -20,6 +17,10 @@ export const homeController = {
     const viewModel = buildHomeViewModel(request)
 
     if (viewModel.authenticatedUser) {
+      logger.info(
+        `Building front-office dashboard [userId=${viewModel.authenticatedUser.sub ?? 'unknown'} | spokes=${viewModel.spokes.map((spoke) => spoke.id).join(',') || 'none'}]`
+      )
+
       await Promise.all(
         viewModel.spokes.map(async (spoke) => {
           spoke.summary = await loadSpokeSummaryData(
@@ -47,7 +48,7 @@ export const homeController = {
 }
 
 function buildHomeViewModel(request) {
-  const authenticatedUser = getHubAuthSession(request)
+  const authenticatedUser = request?.app?.hubAuth ?? null
   const spokes = getAccessibleModulesForHub({
     hubId: currentHubId,
     user: authenticatedUser,
@@ -118,6 +119,8 @@ async function loadSpokeSummaryData(spoke, authenticatedUser) {
       value: 'Error fetching livestock summary, please try again later.'
     }
   }
+
+  logger.info(`Fetched spoke summary [spokeId=${spoke.id}]`)
 
   return {
     ok: true,
