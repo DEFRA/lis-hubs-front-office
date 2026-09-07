@@ -1,21 +1,26 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const { createSpokeAuthToken, getAccessibleModulesForHub, moduleDefinitions } =
-  vi.hoisted(() => ({
-    createSpokeAuthToken: vi.fn(),
-    getAccessibleModulesForHub: vi.fn(),
-    moduleDefinitions: [
-      {
-        id: 'cattle-home',
-        label: 'Home for Cattle',
-        path: '/cattle/home',
-        port: 3221,
-        taxonomy: 'home',
-        species: 'ctt',
-        hubs: ['front-office', 'back-office']
-      }
-    ]
-  }))
+const {
+  createSpokeAuthToken,
+  getAccessibleModulesForHub,
+  logger,
+  moduleDefinitions
+} = vi.hoisted(() => ({
+  createSpokeAuthToken: vi.fn(),
+  getAccessibleModulesForHub: vi.fn(),
+  logger: { error: vi.fn(), info: vi.fn() },
+  moduleDefinitions: [
+    {
+      id: 'cattle-home',
+      label: 'Home for Cattle',
+      path: '/cattle/home',
+      port: 3221,
+      taxonomy: 'home',
+      species: 'ctt',
+      hubs: ['front-office', 'back-office']
+    }
+  ]
+}))
 
 const configValues = {
   'auth.hubJwt.secret': 'front-office-hub-secret-please-change-1234567890',
@@ -44,7 +49,7 @@ vi.mock('@defra/lis-hubs-infra-access/auth', () => ({
 }))
 
 vi.mock('@defra/lis-hubs-infra-core', () => ({
-  logger: { error: vi.fn(), info: vi.fn() },
+  logger,
   requestContext: { getHeaders: vi.fn(() => ({})) }
 }))
 
@@ -179,6 +184,104 @@ describe('#frontOfficeHomeController summary normalisation', () => {
 
     expect(view.mock.calls[0][1].activeHolding.summaryRows[3].lines).toEqual(
       expected
+    )
+  })
+
+  test('Should handle an authenticated user with no identifier or spokes', async () => {
+    const view = vi.fn(() => 'rendered')
+
+    getAccessibleModulesForHub.mockReturnValue([])
+
+    await homeController.handler({ app: { hubAuth: {} } }, { view })
+
+    expect(logger.info).toHaveBeenCalledWith(
+      'Building front-office dashboard [userId=unknown | spokes=none]'
+    )
+    expect(view).toHaveBeenCalledWith(
+      'home/summary',
+      expect.objectContaining({
+        farms: [],
+        activeHolding: null,
+        dashboardMessages: []
+      })
+    )
+  })
+
+  test('Should use summary defaults when holdings and species are omitted', async () => {
+    const view = vi.fn(() => 'rendered')
+
+    getAccessibleModulesForHub.mockReturnValue([moduleDefinitions[0]])
+    createSpokeAuthToken.mockResolvedValue('Bearer token')
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({})
+    })
+
+    await homeController.handler(
+      { app: { hubAuth: { sub: 'user-1' } } },
+      { view }
+    )
+
+    expect(view).toHaveBeenCalledWith(
+      'home/summary',
+      expect.objectContaining({
+        farms: [],
+        activeHolding: null,
+        dashboardMessages: []
+      })
+    )
+  })
+
+  test('Should normalise multiple unidentified animal errors and object addresses', async () => {
+    const view = vi.fn(() => 'rendered')
+
+    getAccessibleModulesForHub.mockReturnValue([moduleDefinitions[0]])
+    createSpokeAuthToken.mockResolvedValue('Bearer token')
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        holdings: [
+          {
+            cph: '12/345/0001',
+            address: {
+              line1: '1 Farm Lane',
+              line2: 'Village',
+              town: 'Town',
+              county: 'County',
+              postcode: 'AB1 2CD',
+              country: 'England'
+            },
+            animals: [
+              { status: 'rejected' },
+              { id: 'animal-2', status: 'error' }
+            ]
+          }
+        ]
+      })
+    })
+
+    await homeController.handler(
+      { app: { hubAuth: { sub: 'user-1' } } },
+      { view }
+    )
+
+    const { activeHolding, dashboardMessages } = view.mock.calls[0][1]
+    expect(activeHolding.summaryRows[3].lines).toEqual([
+      '1 Farm Lane<br>',
+      'Village<br>',
+      'Town<br>',
+      'County<br>',
+      'AB1 2CD<br>',
+      'England<br>'
+    ])
+    expect(activeHolding.animalErrors.map(({ earTag }) => earTag)).toEqual([
+      'Unknown animal',
+      'animal-2'
+    ])
+    expect(dashboardMessages).toContainEqual(
+      expect.objectContaining({
+        text: '2 animal records have an error.'
+      })
     )
   })
 })
