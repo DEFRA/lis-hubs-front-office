@@ -55,9 +55,10 @@ describe('#frontOfficeHomeController', () => {
       speciesOptions: [
         { label: 'Cattle', href: '/cattle', description: expect.any(String) },
         { label: 'Sheep', href: null, description: expect.any(String) },
-        { label: 'Camlid', href: null, description: expect.any(String) },
-        { label: 'Chicken', href: null, description: expect.any(String) },
-        { label: 'Goat', href: null, description: expect.any(String) }
+        { label: 'Pigs', href: null, description: expect.any(String) },
+        { label: 'Goats', href: null, description: expect.any(String) },
+        { label: 'Deer', href: null, description: expect.any(String) },
+        { label: 'Camelids', href: null, description: expect.any(String) }
       ]
     })
   })

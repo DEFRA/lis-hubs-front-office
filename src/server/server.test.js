@@ -72,7 +72,9 @@ describe('#frontOfficeServer', () => {
       ]
     })
 
-    expect(result).toContain('Choose a species')
+    expect(result).toContain(
+      '<h1 class="govuk-heading-xl">Livestock Information Service</h1>'
+    )
     expect(result).toContain('href="/cattle">Cattle</a>')
     expect(result).toContain('card--clickable')
     expect(result).toContain('card--disabled')
