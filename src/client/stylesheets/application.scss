@@ -1,18 +1,35 @@
 @use "govuk-frontend";
 @use "pkg:@defra/lis-infra-ui-services/components/service-navigation.css";
 
-.govuk-tabs__list {
-  border-bottom: 0;
+.card-group {
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.govuk-tabs__list-item {
-  border: 0;
+.card {
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 40px;
+  padding: 25px;
+  border: 1px solid govuk-frontend.govuk-colour("mid-grey");
+  background: govuk-frontend.govuk-colour("white");
 }
 
-.govuk-tabs__list-item--selected {
-  border: 0;
+.card--clickable {
+  border-bottom-width: 5px;
 }
 
-.app-inset-text--flush {
+.card--disabled {
+  border-bottom-width: 5px;
+  background: govuk-frontend.govuk-colour("light-grey");
+}
+
+.card__heading {
   margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.card__description {
+  margin-bottom: 0;
 }

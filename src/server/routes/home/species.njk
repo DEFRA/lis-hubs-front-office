@@ -5,26 +5,27 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">Choose a species</h1>
       <p class="govuk-body">
-        Select a species to register animals, report movements and deaths, and
-        manage holding details.
+        Select a species to begin registering animals, reporting movements and
+        reporting deaths
       </p>
     </div>
   </div>
 
-  <div class="govuk-grid-row">
+  <ul class="govuk-grid-row card-group">
     {% for option in speciesOptions %}
-      <div class="govuk-grid-column-one-third">
-        <h2 class="govuk-heading-m">
-          {% if option.href %}
-            <a class="govuk-link govuk-link--no-visited-state" href="{{ option.href }}">{{ option.label }}</a>
-          {% else %}
-            <span class="govuk-secondary-text-colour">{{ option.label }}</span>
-          {% endif %}
-        </h2>
-        <p class="govuk-body{% if not option.href %} govuk-secondary-text-colour{% endif %}">
-          {{ option.description }}
-        </p>
-      </div>
+      <li class="govuk-grid-column-one-third card-group__item">
+        <div class="card{% if option.href %} card--clickable{% else %} card--disabled{% endif %}">
+          <h2 class="govuk-heading-m card__heading">
+            {% if option.href %}
+              <a class="govuk-link card__link govuk-link--no-visited-state" href="{{ option.href }}">{{ option.label }}</a>
+            {% else %}
+              {{ option.label }}
+              <strong class="govuk-tag govuk-tag--grey">Disabled</strong>
+            {% endif %}
+          </h2>
+          <p class="govuk-body card__description">{{ option.description }}</p>
+        </div>
+      </li>
     {% endfor %}
-  </div>
+  </ul>
 {% endblock %}

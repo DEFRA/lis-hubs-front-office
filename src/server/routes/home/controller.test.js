@@ -3,8 +3,11 @@ import { describe, expect, test, vi } from 'vitest'
 const { moduleDefinitions, speciesDefinitions } = vi.hoisted(() => ({
   moduleDefinitions: [{ id: 'cattle-home' }, { id: 'sheep-home' }],
   speciesDefinitions: [
-    { code: 'ctt', label: 'Cattle' },
-    { code: 'shp', label: 'Sheep' }
+    { id: 'cattle', code: 'ctt', label: 'Cattle' },
+    { id: 'sheep', code: 'shp', label: 'Sheep' },
+    { id: 'camlid', code: 'cml', label: 'Camlid' },
+    { id: 'chicken', code: 'chk', label: 'Chicken' },
+    { id: 'goat', code: 'gt', label: 'Goat' }
   ]
 }))
 
@@ -50,9 +53,11 @@ describe('#frontOfficeHomeController', () => {
     expect(view).toHaveBeenCalledWith('home/species', {
       pageTitle: 'Choose a species',
       speciesOptions: [
-        expect.objectContaining({ label: 'Cattle', href: '/cattle' }),
-        expect.objectContaining({ label: 'Sheep' }),
-        expect.objectContaining({ label: 'Chicken' })
+        { label: 'Cattle', href: '/cattle', description: expect.any(String) },
+        { label: 'Sheep', href: null, description: expect.any(String) },
+        { label: 'Camlid', href: null, description: expect.any(String) },
+        { label: 'Chicken', href: null, description: expect.any(String) },
+        { label: 'Goat', href: null, description: expect.any(String) }
       ]
     })
   })

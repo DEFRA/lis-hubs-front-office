@@ -67,15 +67,16 @@ describe('#frontOfficeServer', () => {
     const result = await server.render('home/species', {
       pageTitle: 'Choose a species',
       speciesOptions: [
-        { label: 'Cattle', description: 'Manage cattle.', href: '/cattle' },
-        { label: 'Sheep', description: 'Not yet available in this service.' }
+        { label: 'Cattle', description: 'Lorem cattle.', href: '/cattle' },
+        { label: 'Sheep', description: 'Lorem sheep.', href: null }
       ]
     })
 
     expect(result).toContain('Choose a species')
     expect(result).toContain('href="/cattle">Cattle</a>')
-    expect(result).toContain('Sheep')
-    expect(result).toContain('govuk-secondary-text-colour')
+    expect(result).toContain('card--clickable')
+    expect(result).toContain('card--disabled')
+    expect(result).toContain('govuk-tag--grey">Disabled</strong>')
   })
 })
 
