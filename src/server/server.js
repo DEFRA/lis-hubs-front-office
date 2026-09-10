@@ -20,7 +20,6 @@ import { config } from '#config/config.js'
 import { auth } from '#server/routes/auth/index.js'
 import { health } from '#server/routes/health/index.js'
 import { home } from '#server/routes/home/index.js'
-import { holdings } from '#server/routes/holdings/index.js'
 import { contentSecurityPolicy } from '#server/plugins/content-security-policy.js'
 import { serveStaticFiles } from '#server/plugins/serve-static-files.js'
 import { profile } from '#server/routes/profile/index.js'
@@ -100,7 +99,6 @@ export async function createServer() {
     auth.plugin,
     health.plugin,
     home.plugin,
-    holdings.plugin,
     profile.plugin,
     proxy.plugin
   ])

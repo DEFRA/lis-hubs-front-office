@@ -1,22 +1,5 @@
 @use "govuk-frontend";
-@use "pkg:@defra/lis-infra-ui-services/components/sub-navigation.css";
-
-.app-service-navigation__item--right {
-  margin-left: auto;
-}
-
-.holding-details {
-  max-width: 960px;
-
-  .govuk-summary-list__row {
-    border-bottom: 1px solid
-      govuk-frontend.govuk-colour("black", $variant: "tint-80");
-  }
-
-  .govuk-summary-list__key {
-    width: 32%;
-  }
-}
+@use "pkg:@defra/lis-infra-ui-services/components/service-navigation.css";
 
 .govuk-tabs__list {
   border-bottom: 0;
