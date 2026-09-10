@@ -1,8 +1,5 @@
 @use "govuk-frontend";
-
-.app-service-navigation__item--right {
-  margin-left: auto;
-}
+@use "pkg:@defra/lis-infra-ui-services/components/service-navigation.css";
 
 .govuk-tabs__list {
   border-bottom: 0;
