@@ -1,15 +1,11 @@
 {% extends 'layouts/page.njk' %}
 
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">Choose a species</h1>
-      <p class="govuk-body">
-        Select a species to begin registering animals, reporting movements and
-        reporting deaths
-      </p>
-    </div>
-  </div>
+  <h1 class="govuk-heading-xl">Choose a species</h1>
+  <p class="govuk-body-l">
+    Select a species to begin registering animals, reporting movements and
+    reporting deaths
+  </p>
 
   <ul class="govuk-grid-row card-group">
     {% for option in speciesOptions %}
@@ -20,7 +16,6 @@
               <a class="govuk-link card__link govuk-link--no-visited-state" href="{{ option.href }}">{{ option.label }}</a>
             {% else %}
               {{ option.label }}
-              <strong class="govuk-tag govuk-tag--grey">Disabled</strong>
             {% endif %}
           </h2>
           <p class="govuk-body card__description">{{ option.description }}</p>

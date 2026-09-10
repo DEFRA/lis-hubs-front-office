@@ -76,7 +76,6 @@ describe('#frontOfficeServer', () => {
     expect(result).toContain('href="/cattle">Cattle</a>')
     expect(result).toContain('card--clickable')
     expect(result).toContain('card--disabled')
-    expect(result).toContain('govuk-tag--grey">Disabled</strong>')
   })
 })
 
