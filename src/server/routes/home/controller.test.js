@@ -1,105 +1,32 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
-const {
-  createSpokeAuthToken,
-  getAccessibleModulesForHub,
-  logger,
-  requestContext,
-  moduleDefinitions
-} = vi.hoisted(() => ({
-  createSpokeAuthToken: vi.fn(),
-  getAccessibleModulesForHub: vi.fn(),
-  logger: { error: vi.fn(), info: vi.fn() },
-  requestContext: { getHeaders: vi.fn(() => ({})) },
-  moduleDefinitions: [
-    {
-      id: 'cattle-home',
-      label: 'Home for Cattle',
-      path: '/cattle/home',
-      port: 3221,
-      taxonomy: 'home',
-      species: 'ctt',
-      hubs: ['front-office', 'back-office']
-    },
-    {
-      id: 'sheep-home',
-      label: 'Home for Sheep',
-      path: '/sheep/home',
-      port: 3224,
-      taxonomy: 'home',
-      species: 'shp',
-      hubs: ['front-office', 'back-office']
-    }
+const { moduleDefinitions, speciesDefinitions } = vi.hoisted(() => ({
+  moduleDefinitions: [{ id: 'cattle-home' }, { id: 'sheep-home' }],
+  speciesDefinitions: [
+    { id: 'cattle', code: 'ctt', label: 'Cattle' },
+    { id: 'sheep', code: 'shp', label: 'Sheep' },
+    { id: 'camlid', code: 'cml', label: 'Camlid' },
+    { id: 'chicken', code: 'chk', label: 'Chicken' },
+    { id: 'goat', code: 'gt', label: 'Goat' }
   ]
-}))
-
-const configValues = {
-  'auth.hubJwt.secret': 'front-office-hub-secret-please-change-1234567890',
-  'auth.hubJwt.issuer': 'http://localhost:3101',
-  'auth.hubJwt.audience': 'livestock-spokes',
-  'auth.hubJwt.ttlSeconds': 14400,
-  'auth.hubOrigin': 'http://localhost:3101'
-}
-
-vi.mock('@defra/lis-hubs-infra-access', () => ({
-  getAccessibleModulesForHub
 }))
 
 vi.mock('@defra/lis-hubs-infra-registry', () => ({
   MODULES: moduleDefinitions,
-  SPECIES: [
-    {
-      code: 'ctt',
-      label: 'Cattle'
-    },
-    {
-      code: 'shp',
-      label: 'Sheep'
-    }
-  ],
-  hydrateModuleMetadata: vi.fn((module) => ({
-    ...module,
-    taxonomyLabel: 'Home',
-    speciesLabel: module.species === 'ctt' ? 'Cattle' : 'Sheep'
-  }))
-}))
-
-vi.mock('@defra/lis-hubs-infra-access/auth', () => ({
-  createSpokeAuthToken
-}))
-
-vi.mock('@defra/lis-hubs-infra-core', () => ({
-  logger,
-  requestContext
-}))
-
-vi.mock('#config/config.js', () => ({
-  config: {
-    get: vi.fn((path) => configValues[path])
-  }
+  SPECIES: speciesDefinitions
 }))
 
 import { homeController } from './controller.js'
 
 describe('#frontOfficeHomeController', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    requestContext.getHeaders.mockReturnValue({})
-    global.fetch = vi.fn()
-  })
-
-  test('Should render the welcome view for unauthenticated users', async () => {
+  test('Should render the welcome view for unauthenticated users', () => {
+    // Arrange
     const view = vi.fn(() => 'rendered')
 
-    getAccessibleModulesForHub.mockReturnValue([])
+    // Act
+    const response = homeController.handler({}, { view })
 
-    const response = await homeController.handler(
-      {},
-      {
-        view
-      }
-    )
-
+    // Assert
     expect(response).toBe('rendered')
     expect(view).toHaveBeenCalledWith(
       'home/welcome',
@@ -107,317 +34,48 @@ describe('#frontOfficeHomeController', () => {
         pageTitle: 'Welcome',
         heading: 'Livestock Information',
         loginUrl: '/auth/login?returnUrl=/',
+        supportedSpecies: speciesDefinitions,
         supportedSpokes: moduleDefinitions
       })
     )
   })
 
-  test('Should render livestock home summaries for authenticated users', async () => {
-    const authenticatedUser = {
-      sub: 'user-1',
-      firstName: 'Test',
-      lastName: 'User',
-      statements: [
-        {
-          role: 'lis-role-keeper',
-          cphs: '*',
-          permissions: ['lis-perm-front-office', 'lis-perm-cattle-read']
-        }
-      ]
-    }
+  test('Should render the species selector for authenticated users', () => {
+    // Arrange
     const view = vi.fn(() => 'rendered')
-    requestContext.getHeaders.mockReturnValue({
-      'x-cdp-request-id': 'trace-123'
-    })
+    const request = { app: { hubAuth: { sub: 'user-1' } } }
 
-    getAccessibleModulesForHub.mockReturnValue(moduleDefinitions)
-    createSpokeAuthToken.mockResolvedValue('Bearer token')
-    global.fetch.mockImplementation(async (url) => ({
-      ok: true,
-      json: vi.fn().mockResolvedValue(
-        url.includes('/cattle/')
-          ? {
-              species: {
-                id: 'cattle',
-                label: 'Cattle',
-                url: '/cattle/home'
-              },
-              holdings: [
-                {
-                  farmName: 'My farm',
-                  cph: '10/081/1234',
-                  postcode: 'MK11 1AA',
-                  businessName: 'My Livestock Ltd',
-                  address: {
-                    line1: '1 Farm Lane',
-                    town: 'Milton Keynes',
-                    postcode: 'MK11 1AA',
-                    country: 'England'
-                  },
-                  holdingType: 'Permanent',
-                  registeredKeeper: 'Test User',
-                  herdMark: 'UK 123456',
-                  count: 7,
-                  url: '/cattle/home?cph=10%2F081%2F1234',
-                  animals: [
-                    {
-                      id: 'UK123456100001',
-                      earTag: 'UK 123456 100001',
-                      dateOfBirth: '2024-01-15',
-                      dateRegistered: '2024-01-18',
-                      sex: 'Female',
-                      breed: 'Holstein Friesian',
-                      status: 'saved'
-                    },
-                    {
-                      id: 'UK123456100005',
-                      earTag: 'UK 123456 100005',
-                      dateOfBirth: '2024-03-27',
-                      dateRegistered: '2024-04-02',
-                      sex: 'Male',
-                      breed: 'Hereford',
-                      status: 'error',
-                      errorReason: 'Ear tag did not match.'
-                    }
-                  ]
-                }
-              ],
-              actions: [
-                {
-                  title: 'Check cattle records',
-                  text: 'One record needs attention.',
-                  url: '/cattle/home',
-                  linkText: 'Review cattle'
-                }
-              ]
-            }
-          : {
-              species: {
-                id: 'sheep',
-                label: 'Sheep',
-                url: '/sheep/home'
-              },
-              holdings: [
-                {
-                  farmName: 'My farm',
-                  cph: '10/081/1234',
-                  postcode: 'MK11 1AA',
-                  count: 12,
-                  url: '/sheep/home?cph=10%2F081%2F1234',
-                  animals: [
-                    {
-                      id: 'UK012345600001',
-                      earTag: 'UK 012345 600001',
-                      dateOfBirth: '2025-02-03',
-                      sex: 'Female',
-                      breed: 'Texel',
-                      status: 'pending'
-                    }
-                  ]
-                }
-              ],
-              actions: []
-            }
-      )
-    }))
+    // Act
+    const response = homeController.handler(request, { view })
 
-    const response = await homeController.handler(
-      { app: { hubAuth: authenticatedUser } },
-      {
-        view
-      }
-    )
-
+    // Assert
     expect(response).toBe('rendered')
-    expect(getAccessibleModulesForHub).toHaveBeenCalledWith(
-      expect.objectContaining({ taxonomy: 'home', user: authenticatedUser })
-    )
-    expect(logger.info).toHaveBeenCalledWith(
-      'Building front-office dashboard [userId=user-1 | spokes=cattle-home,sheep-home]'
-    )
-    expect(logger.info).toHaveBeenCalledWith(
-      'Fetched spoke summary [spokeId=cattle-home]'
-    )
-    expect(createSpokeAuthToken).toHaveBeenCalledWith(
-      expect.objectContaining({
-        spokeId: 'cattle-home',
-        taxonomyId: 'home',
-        user: authenticatedUser
-      }),
-      expect.objectContaining({
-        audience: 'livestock-spokes'
-      })
-    )
-    expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:3101/cattle/home/summary-data',
-      expect.objectContaining({
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: 'Bearer token',
-          'x-cdp-request-id': 'trace-123'
-        }
-      })
-    )
-    expect(view).toHaveBeenCalledWith(
-      'home/summary',
-      expect.objectContaining({
-        authenticatedUser,
-        dashboardMessages: expect.arrayContaining([
-          {
-            title: 'Check cattle records',
-            text: 'One record needs attention.',
-            url: '/cattle/home',
-            linkText: 'Review cattle'
-          },
-          {
-            title: 'Animal records need attention',
-            text: '1 animal record has an error.',
-            url: '#animal-error',
-            linkText: 'View animal error record'
-          }
-        ]),
-        farms: expect.arrayContaining([
-          expect.objectContaining({
-            name: 'My farm',
-            cphs: expect.arrayContaining([
-              expect.objectContaining({
-                id: '10/081/1234',
-                postcode: 'MK11 1AA',
-                businessName: 'My Livestock Ltd',
-                species: expect.arrayContaining([
-                  {
-                    id: 'cattle',
-                    label: 'Cattle',
-                    count: 7,
-                    url: '/cattle/home?cph=10%2F081%2F1234'
-                  },
-                  {
-                    id: 'sheep',
-                    label: 'Sheep',
-                    count: 12,
-                    url: '/sheep/home?cph=10%2F081%2F1234'
-                  }
-                ])
-              })
-            ])
-          })
-        ]),
-        activeHolding: expect.objectContaining({
-          id: '10/081/1234',
-          name: 'My farm',
-          animalsUrl: '/cattle/home?cph=10%2F081%2F1234',
-          errorsUrl: '/cattle/home',
-          businessName: 'My Livestock Ltd',
-          holdingType: 'Permanent',
-          registeredKeeper: 'Test User',
-          herdMark: 'UK 123456',
-          animalsOnHolding: expect.arrayContaining([
-            [
-              { text: 'Cattle' },
-              { text: 'UK 123456 100001' },
-              { text: '15 January 2024' },
-              { text: '18 January 2024' },
-              { text: 'Female' },
-              { text: 'Holstein Friesian' },
-              {
-                html: '<strong class="govuk-tag govuk-tag--green">Valid</strong>'
-              }
-            ],
-            [
-              { text: 'Cattle' },
-              { text: 'UK 123456 100005' },
-              { text: '27 March 2024' },
-              { text: '2 April 2024' },
-              { text: 'Male' },
-              { text: 'Hereford' },
-              {
-                html: '<strong class="govuk-tag govuk-tag--red">Error</strong>'
-              }
-            ]
-          ]),
-          animalErrors: [
-            {
-              earTag: 'UK 123456 100005',
-              summaryRows: [
-                {
-                  key: { text: 'Species' },
-                  value: { text: 'Cattle' }
-                },
-                {
-                  key: { text: 'Date of birth' },
-                  value: { text: '27 March 2024' }
-                },
-                {
-                  key: { text: 'Date of registration' },
-                  value: { text: '2 April 2024' }
-                },
-                {
-                  key: { text: 'Reason for error' },
-                  value: {
-                    text: 'Ear tag did not match.'
-                  }
-                }
-              ]
-            }
-          ]
-        })
-      })
-    )
-
-    const animals = view.mock.calls[0][1].activeHolding.animalsOnHolding
-    const statuses = animals.map((row) => row.at(-1).html)
-    expect(
-      statuses.filter((status) => status.includes('>Valid<'))
-    ).toHaveLength(1)
-    expect(
-      statuses.filter((status) => status.includes('>Pending<'))
-    ).toHaveLength(1)
-    expect(
-      statuses.filter((status) => status.includes('>Error<'))
-    ).toHaveLength(1)
-    expect(animals.map((row) => row[0].text)).toEqual([
-      'Cattle',
-      'Cattle',
-      'Sheep'
-    ])
+    expect(view).toHaveBeenCalledWith('home/species', {
+      pageTitle: 'Choose a species',
+      speciesOptions: [
+        { label: 'Cattle', href: '/cattle', description: expect.any(String) },
+        { label: 'Sheep', href: null, description: expect.any(String) },
+        { label: 'Pigs', href: null, description: expect.any(String) },
+        { label: 'Goats', href: null, description: expect.any(String) },
+        { label: 'Deer', href: null, description: expect.any(String) },
+        { label: 'Camelids', href: null, description: expect.any(String) }
+      ]
+    })
   })
 
-  test('Should surface unavailable species summaries as dashboard messages', async () => {
-    const authenticatedUser = {
-      sub: 'user-1',
-      firstName: 'Test',
-      lastName: 'User'
-    }
-    const view = vi.fn(() => 'rendered')
+  test('Should only wire up the Cattle option', () => {
+    // Arrange
+    const view = vi.fn()
+    const request = { app: { hubAuth: { sub: 'user-1' } } }
 
-    getAccessibleModulesForHub.mockReturnValue([moduleDefinitions[0]])
-    createSpokeAuthToken.mockResolvedValue('Bearer token')
-    global.fetch.mockResolvedValue({
-      ok: false,
-      status: 503,
-      statusText: 'Service Unavailable'
-    })
+    // Act
+    homeController.handler(request, { view })
 
-    await homeController.handler(
-      { app: { hubAuth: authenticatedUser }, headers: {} },
-      { view }
-    )
-
-    expect(view).toHaveBeenCalledWith(
-      'home/summary',
-      expect.objectContaining({
-        dashboardMessages: [
-          {
-            title: 'Cattle summary unavailable',
-            text: 'Error fetching livestock summary, please try again later.'
-          }
-        ],
-        farms: []
-      })
-    )
-    expect(logger.error).toHaveBeenCalledWith(
-      'Failed to fetch spoke summary for cattle-home: 503 Service Unavailable'
-    )
+    // Assert
+    const { speciesOptions } = view.mock.calls[0][1]
+    const linked = speciesOptions.filter((option) => option.href)
+    expect(linked).toEqual([
+      expect.objectContaining({ label: 'Cattle', href: '/cattle' })
+    ])
   })
 })

@@ -1,0 +1,26 @@
+{% extends 'layouts/page.njk' %}
+
+{% block content %}
+  <h1 class="govuk-heading-xl">Livestock Information Service</h1>
+  <p class="govuk-body-l">
+    Select a species to begin registering animals, reporting movements and
+    reporting deaths
+  </p>
+
+  <ul class="govuk-grid-row card-group">
+    {% for option in speciesOptions %}
+      <li class="govuk-grid-column-one-third card-group__item">
+        <div class="card{% if option.href %} card--clickable{% else %} card--disabled{% endif %}">
+          <h2 class="govuk-heading-m card__heading">
+            {% if option.href %}
+              <a class="govuk-link card__link govuk-link--no-visited-state" href="{{ option.href }}">{{ option.label }}</a>
+            {% else %}
+              {{ option.label }}
+            {% endif %}
+          </h2>
+          <p class="govuk-body card__description">{{ option.description }}</p>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}
