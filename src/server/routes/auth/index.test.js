@@ -7,7 +7,7 @@ const {
   buildLogoutUrl,
   completeAuthorizationCodeGrant,
   configGet,
-  fetchUserProfile,
+  ensureAccount,
   getHubAuthSession,
   setHubAuthSession
 } = vi.hoisted(() => ({
@@ -15,7 +15,7 @@ const {
   buildLogoutUrl: vi.fn(),
   completeAuthorizationCodeGrant: vi.fn(),
   configGet: vi.fn(),
-  fetchUserProfile: vi.fn(),
+  ensureAccount: vi.fn(),
   getHubAuthSession: vi.fn(),
   setHubAuthSession: vi.fn()
 }))
@@ -36,7 +36,7 @@ vi.mock('@defra/lis-hubs-infra-access/auth', async () => {
 })
 
 vi.mock('#server/common/helpers/clients.js', () => ({
-  ishClient: { fetchUserProfile }
+  krdsClient: { ensureAccount }
 }))
 
 vi.mock('#config/config.js', () => ({
@@ -121,19 +121,14 @@ describe('#frontOfficeAuthRoutes', () => {
       idToken: 'id-token',
       authenticatedAt: '2026-05-15T10:00:00.000Z'
     }
-    const directAssignment = {
-      id: 'assignment-1',
-      countyParishHoldingId: 'cph-1',
-      countyParishHoldingNumber: '10/081/1234',
-      userId: 'test-user',
-      roleId: 'role-1',
-      roleName: 'Keeper',
-      email: 'test.user@example.com',
-      displayName: 'Test User'
+    const cphAssociation = {
+      id: 'association-1',
+      cphNumber: '10/081/1234',
+      role: 'Keeper',
+      holdingId: 'holding-1',
+      holdingName: 'Oakfield Farm'
     }
-    const profile = {
-      directAssignments: [directAssignment]
-    }
+    const account = { cphAssociations: [cphAssociation] }
 
     completeAuthorizationCodeGrant.mockResolvedValue({
       user,
@@ -141,7 +136,7 @@ describe('#frontOfficeAuthRoutes', () => {
       accessToken: 'access-token',
       returnUrl: '/dashboard'
     })
-    fetchUserProfile.mockResolvedValue(profile)
+    ensureAccount.mockResolvedValue(account)
 
     const server = await createTestServer()
     const response = await server.inject({
@@ -153,7 +148,12 @@ describe('#frontOfficeAuthRoutes', () => {
 
     expect(response.statusCode).toBe(302)
     expect(response.headers.location).toBe('/dashboard')
-    expect(fetchUserProfile).toHaveBeenCalledWith(user.sub)
+    expect(ensureAccount).toHaveBeenCalledWith({
+      sub: user.sub,
+      email: user.email,
+      given_name: user.firstName,
+      family_name: user.lastName
+    })
     const token = extractCookieValue(
       response.headers['set-cookie'],
       'livestock_hub_jwt'
@@ -169,7 +169,15 @@ describe('#frontOfficeAuthRoutes', () => {
     expect('permissions' in payload).toBe(false)
     expect('roleAssignments' in payload).toBe(false)
     expect('permissionAssignments' in payload).toBe(false)
-    expect(payload.holdings).toEqual([directAssignment])
+    expect(payload.holdings).toEqual([
+      {
+        id: 'association-1',
+        countyParishHoldingId: 'holding-1',
+        countyParishHoldingNumber: '10/081/1234',
+        holdingName: 'Oakfield Farm',
+        roleName: 'Keeper'
+      }
+    ])
     expect(payload.authzVersion).toBe(1)
   })
 
