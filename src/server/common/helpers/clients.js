@@ -1,8 +1,9 @@
-import { IdentityServiceHelperClient } from '@defra/lis-hubs-infra-access/ish-client'
+import { KrdsClient } from '@defra/lis-hubs-infra-access/krds-client'
 
 import { config } from '#config/config.js'
 
-export const ishClient = new IdentityServiceHelperClient(
-  config.get('identityServiceHelper.url'),
-  config.get('identityServiceHelper.apiKey')
+export const krdsClient = new KrdsClient(
+  config.get('krds.url'),
+  config.get('krds.clientId'),
+  config.get('krds.clientSecret')
 )

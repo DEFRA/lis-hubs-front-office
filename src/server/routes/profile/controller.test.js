@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const { fetchUserProfile } = vi.hoisted(() => ({
-  fetchUserProfile: vi.fn()
+const { fetchUserAccount } = vi.hoisted(() => ({
+  fetchUserAccount: vi.fn()
 }))
 
 vi.mock('#server/common/helpers/clients.js', () => ({
-  ishClient: { fetchUserProfile }
+  krdsClient: { fetchUserAccount }
 }))
 
 vi.mock('#config/config.js', () => ({
@@ -44,23 +44,20 @@ describe('#profileController', () => {
       lastName: 'User',
       email: 'test.user@example.com'
     }
-    const profile = {
-      directAssignments: [
+    const account = {
+      cphAssociations: [
         {
-          id: 'assignment-1',
-          countyParishHoldingId: 'cph-1',
-          countyParishHoldingNumber: '12/345/6789',
-          userId: 'test-user',
-          roleId: 'role-1',
-          roleName: 'Keeper',
-          email: 'test.user@example.com',
-          displayName: 'Test User'
+          id: 'association-1',
+          holdingId: 'holding-1',
+          cphNumber: '12/345/6789',
+          role: 'Keeper',
+          holdingName: 'Oakfield Farm'
         }
       ]
     }
     const view = vi.fn(() => 'rendered')
 
-    fetchUserProfile.mockResolvedValue(profile)
+    fetchUserAccount.mockResolvedValue(account)
 
     const response = await profileController.handler(
       {
@@ -74,7 +71,7 @@ describe('#profileController', () => {
     )
 
     expect(response).toBe('rendered')
-    expect(fetchUserProfile).toHaveBeenCalledWith(authenticatedUser.sub)
+    expect(fetchUserAccount).toHaveBeenCalledWith(authenticatedUser.sub)
     expect(view).toHaveBeenCalledWith(
       'profile/index',
       expect.objectContaining({
@@ -101,17 +98,14 @@ describe('#profileController', () => {
       lastName: 'User',
       email: 'test.user@example.com'
     }
-    const profile = {
-      directAssignments: [
+    const account = {
+      cphAssociations: [
         {
-          id: 'assignment-1',
-          countyParishHoldingId: 'cph-1',
-          countyParishHoldingNumber: '12/345/6789',
-          userId: 'test-user',
-          roleId: 'role-1',
-          roleName: 'Keeper',
-          email: 'test.user@example.com',
-          displayName: 'Test User',
+          id: 'association-1',
+          holdingId: 'holding-1',
+          cphNumber: '12/345/6789',
+          role: 'Keeper',
+          holdingName: 'Oakfield Farm',
           longitude: -3.51,
           latitude: 54.21
         }
@@ -119,7 +113,7 @@ describe('#profileController', () => {
     }
     const view = vi.fn(() => 'rendered')
 
-    fetchUserProfile.mockResolvedValue(profile)
+    fetchUserAccount.mockResolvedValue(account)
 
     await profileController.handler(
       {

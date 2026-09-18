@@ -229,19 +229,25 @@ export const config = convict({
       sensitive: true
     }
   },
-  identityServiceHelper: {
+  krds: {
     url: {
-      doc: 'identity-service-helper endpoint used to enrich hub auth sessions',
+      doc: 'keeper-data-api (krds) endpoint used to enrich hub auth sessions',
       format: String,
       nullable: true,
       default: null,
-      env: 'IDENTITY_SERVICE_HELPER_URL'
+      env: 'KRDS_URL'
     },
-    apiKey: {
-      doc: 'x-api-key value identity-service-helper requires',
+    clientId: {
+      doc: 'Basic auth client ID krds requires',
       format: String,
       default: '',
-      env: 'IDENTITY_SERVICE_HELPER_API_KEY',
+      env: 'KRDS_CLIENT_ID'
+    },
+    clientSecret: {
+      doc: 'Basic auth secret paired with krds.clientId',
+      format: String,
+      default: '',
+      env: 'KRDS_CLIENT_SECRET',
       sensitive: true
     }
   },

@@ -6,7 +6,8 @@ import {
 } from '@defra/lis-hubs-infra-access/auth'
 
 import { config } from '#config/config.js'
-import { ishClient } from '#server/common/helpers/clients.js'
+import { krdsClient } from '#server/common/helpers/clients.js'
+import { toHoldings } from '#server/common/helpers/krds-mapping.js'
 import {
   buildAuthorizationUrl,
   buildLogoutUrl,
@@ -14,17 +15,22 @@ import {
 } from '#server/common/helpers/auth/oidc.js'
 
 // Only one role exists for front-office users at present, so it's granted
-// unconditionally rather than derived from identity-service-helper's per-CPH
-// roleName (e.g. "Keeper") - revisit once real role requirements exist.
+// unconditionally rather than derived from krds's per-CPH role (e.g.
+// "Keeper") - revisit once real role requirements exist.
 const DEFAULT_ROLE = 'cphholder'
 
 async function resolveAuthSession({ user }) {
-  const profile = await ishClient.fetchUserProfile(user.sub)
+  const account = await krdsClient.ensureAccount({
+    sub: user.sub,
+    email: user.email,
+    given_name: user.firstName,
+    family_name: user.lastName
+  })
 
   return resolveAuthorization({
     source: 'profile',
     holdingRoles: [{ role: DEFAULT_ROLE, cph: GLOBAL_CPH_SCOPE }],
-    holdings: profile.directAssignments
+    holdings: toHoldings(account.cphAssociations)
   })
 }
 

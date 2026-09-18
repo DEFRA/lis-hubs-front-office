@@ -1,8 +1,9 @@
 import { config } from '#config/config.js'
-import { ishClient } from '#server/common/helpers/clients.js'
+import { krdsClient } from '#server/common/helpers/clients.js'
+import { toHoldings } from '#server/common/helpers/krds-mapping.js'
 
-// identity-service-helper has no geo data today, so this always returns null -
-// kept so a holding's mapUrl can be wired up again once coordinates exist.
+// krds has no geo data today, so this always returns null - kept so a
+// holding's mapUrl can be wired up again once coordinates exist.
 function buildHoldingMapUrl(holding) {
   if (!holding.longitude || !holding.latitude) {
     return null
@@ -20,10 +21,10 @@ export const profileController = {
       return h.redirect('/auth/login?returnUrl=/profile')
     }
 
-    const profile = await ishClient.fetchUserProfile(authenticatedUser.sub)
+    const account = await krdsClient.fetchUserAccount(authenticatedUser.sub)
     const userProfile = {
       user: authenticatedUser,
-      holdings: profile.directAssignments
+      holdings: toHoldings(account.cphAssociations)
     }
 
     for (const holding of userProfile.holdings) {
