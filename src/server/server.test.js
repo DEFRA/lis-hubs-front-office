@@ -63,21 +63,46 @@ describe('#frontOfficeServer', () => {
     expect(response.result).toContain('Livestock Information')
   })
 
-  test('Should render the species selector', async () => {
-    const result = await server.render('home/species', {
-      pageTitle: 'Choose a species',
-      speciesOptions: [
-        { label: 'Cattle', description: 'Lorem cattle.', href: '/cattle' },
-        { label: 'Sheep', description: 'Lorem sheep.', href: null }
+  test('Should render the holdings table', async () => {
+    const result = await server.render('home/holdings', {
+      pageTitle: 'My holdings',
+      holdings: [
+        {
+          countyParishHoldingNumber: '12/345/0001',
+          holdingName: 'Oakfield Farm',
+          roleName: 'Owner'
+        },
+        {
+          countyParishHoldingNumber: '24/118/0042',
+          holdingName: null,
+          roleName: 'Agent'
+        }
       ]
     })
 
+    expect(result).toContain('<h1 class="govuk-heading-xl">My holdings</h1>')
     expect(result).toContain(
-      '<h1 class="govuk-heading-xl">Livestock Information Service</h1>'
+      '<div class="lis-sortable-table__wrapper" tabindex="0" role="region" aria-label="My holdings table">'
     )
-    expect(result).toContain('href="/cattle">Cattle</a>')
-    expect(result).toContain('card--clickable')
-    expect(result).toContain('card--disabled')
+    expect(result).toContain(
+      '<a class="govuk-link" href="/cattle/holdings/12/345/0001">12/345/0001</a>'
+    )
+    expect(result).toContain('<td class="govuk-table__cell">Oakfield Farm</td>')
+    expect(result).toContain('<td class="govuk-table__cell">Agent</td>')
+    expect(result).toContain(
+      '<td class="govuk-table__cell"><strong class="govuk-tag govuk-tag--red">Not supplied</strong></td>'
+    )
+  })
+
+  test('Should render the no-holdings page', async () => {
+    const result = await server.render('home/no-holdings', {
+      pageTitle: 'My holdings'
+    })
+
+    expect(result).toContain(
+      'No holdings are currently linked to this account.'
+    )
+    expect(result).not.toContain('govuk-table')
   })
 })
 
