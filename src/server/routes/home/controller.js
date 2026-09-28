@@ -1,39 +1,39 @@
 import { MODULES, SPECIES } from '@defra/lis-hubs-infra-registry'
 
-// The design has no multi-species entry point yet, so this is a deliberately
-// blunt species selector modelled on the archived livestock-usability/v3
-// prototype: its species list with placeholder copy, only Cattle wired up.
-const placeholderDescription =
-  'Donec tristique velit pellentesque fringilla tincidunt.'
-
-const speciesOptions = [
-  'Cattle',
-  'Sheep',
-  'Pigs',
-  'Goats',
-  'Deer',
-  'Camelids'
-].map((label) => ({
-  label,
-  href: label === 'Cattle' ? '/cattle' : null,
-  description: placeholderDescription
-}))
+import { krdsClient } from '#server/common/helpers/clients.js'
+import { toHoldings } from '#server/common/helpers/krds-mapping.js'
 
 export const homeController = {
-  handler(request, h) {
-    if (request.app?.hubAuth) {
-      return h.view('home/species', {
-        pageTitle: 'Choose a species',
-        speciesOptions
+  async handler(request, h) {
+    const authenticatedUser = request.app?.hubAuth
+
+    if (!authenticatedUser) {
+      return h.view('home/welcome', {
+        pageTitle: 'Welcome',
+        heading: 'Livestock Information',
+        supportedSpecies: SPECIES,
+        supportedSpokes: MODULES,
+        loginUrl: '/auth/login?returnUrl=/'
       })
     }
+    const account = await krdsClient.fetchUserAccount(authenticatedUser.sub)
+    const holdings = toHoldings(account.cphAssociations)
 
-    return h.view('home/welcome', {
-      pageTitle: 'Welcome',
-      heading: 'Livestock Information',
-      supportedSpecies: SPECIES,
-      supportedSpokes: MODULES,
-      loginUrl: '/auth/login?returnUrl=/'
+    if (holdings.length === 0) {
+      return h.view('home/no-holdings', {
+        pageTitle: 'My holdings'
+      })
+    }
+    // Temporary steel-thread shortcut: assumes every holding is cattle.
+    if (holdings.length === 1) {
+      return h.redirect(
+        `/cattle/holdings/${holdings[0].countyParishHoldingNumber}`
+      )
+    }
+
+    return h.view('home/holdings', {
+      pageTitle: 'My holdings',
+      holdings
     })
   }
 }

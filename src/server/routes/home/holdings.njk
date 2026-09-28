@@ -1,0 +1,34 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "sortable-paginated-table/macro.njk" import sortablePaginatedTable %}
+{% from "not-supplied/macro.njk" import notSupplied %}
+
+{% block content %}
+  <h1 class="govuk-heading-xl">My holdings</h1>
+
+  {% set notSuppliedHtml = notSupplied() %}
+
+  {%- set rows = [] -%}
+  {%- for holding in holdings -%}
+    {%- set cphHtml -%}
+      <a class="govuk-link" href="/cattle/holdings/{{ holding.countyParishHoldingNumber }}">{{ holding.countyParishHoldingNumber }}</a>
+    {%- endset -%}
+    {%- set _ = rows.push([
+      { html: cphHtml },
+      { text: holding.holdingName } if holding.holdingName else { html: notSuppliedHtml },
+      { text: holding.postcode } if holding.postcode else { html: notSuppliedHtml },
+      { text: holding.roleName }
+    ]) -%}
+  {%- endfor -%}
+
+  {{ sortablePaginatedTable({
+    caption: "My holdings",
+    columns: [
+      { text: "CPH" },
+      { text: "Holding name" },
+      { text: "Postcode" },
+      { text: "Role" }
+    ],
+    rows: rows
+  }) }}
+{% endblock %}
