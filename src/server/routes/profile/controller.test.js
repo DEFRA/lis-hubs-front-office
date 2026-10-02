@@ -34,7 +34,7 @@ describe('#profileController', () => {
           id: 'association-1',
           holdingId: 'holding-1',
           cphNumber: '12/345/6789',
-          role: 'Keeper',
+          role: 'owner',
           holdingName: 'Oakfield Farm'
         }
       ]
@@ -67,7 +67,7 @@ describe('#profileController', () => {
           holdings: [
             expect.objectContaining({
               countyParishHoldingNumber: '12/345/6789',
-              roleName: 'Keeper',
+              roleName: 'owner',
               mapUrl: null
             })
           ]
@@ -89,7 +89,7 @@ describe('#profileController', () => {
           id: 'association-1',
           holdingId: 'holding-1',
           cphNumber: '12/345/6789',
-          role: 'Keeper',
+          role: 'owner',
           holdingName: 'Oakfield Farm',
           longitude: -3.51,
           latitude: 54.21

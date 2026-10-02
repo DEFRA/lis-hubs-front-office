@@ -104,7 +104,7 @@ describe('#frontOfficeAuthRoutes', () => {
     const cphAssociation = {
       id: 'association-1',
       cphNumber: '10/081/1234',
-      role: 'Keeper',
+      role: 'owner',
       holdingId: 'holding-1',
       holdingName: 'Oakfield Farm'
     }
@@ -143,7 +143,7 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(payload.sub).toBe(user.sub)
     expect(payload.statements).toEqual([
       { role: 'lis-role-reader', cphs: '*' },
-      { role: 'lis-role-keeper', cphs: '*' }
+      { role: 'lis-role-keeper', cphs: ['10/081/1234'] }
     ])
     expect('roles' in payload).toBe(false)
     expect('permissions' in payload).toBe(false)
@@ -155,7 +155,7 @@ describe('#frontOfficeAuthRoutes', () => {
         countyParishHoldingId: 'holding-1',
         countyParishHoldingNumber: '10/081/1234',
         holdingName: 'Oakfield Farm',
-        roleName: 'Keeper'
+        roleName: 'owner'
       }
     ])
     expect(payload.authzVersion).toBe(1)

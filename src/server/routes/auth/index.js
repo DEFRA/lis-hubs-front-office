@@ -2,24 +2,22 @@ import {
   createHubAuth,
   createHubCookieOptions
 } from '@defra/lis-hubs-infra-access/authentication'
-import {
-  GLOBAL_CPH_SCOPE,
-  resolveAuthorization
-} from '@defra/lis-hubs-infra-access/authorization'
+import { resolveAuthorization } from '@defra/lis-hubs-infra-access/authorization'
 
 import { config } from '#config/config.js'
 import { krdsClient } from '#server/common/helpers/clients.js'
-import { toHoldings } from '#server/common/helpers/krds-mapping.js'
+import {
+  toHoldingRoles,
+  toHoldings
+} from '#server/common/helpers/krds-mapping.js'
 import {
   buildAuthorizationUrl,
   buildLogoutUrl,
   completeAuthorizationCodeGrant
 } from '#server/common/helpers/auth/oidc.js'
 
-// Only one role exists for front-office users at present, so it's granted
-// unconditionally rather than derived from krds's per-CPH role (e.g.
-// "Keeper") - revisit once real role requirements exist.
-const DEFAULT_ROLE = 'cphholder'
+// Roles come from krds's per-CPH associations, so a user's access to a
+// holding is scoped to the CPHs krds says they hold a role on.
 
 async function resolveAuthSession({ user }) {
   const account = await krdsClient.ensureAccount({
@@ -30,8 +28,8 @@ async function resolveAuthSession({ user }) {
   })
 
   return resolveAuthorization({
-    source: 'profile',
-    holdingRoles: [{ role: DEFAULT_ROLE, cph: GLOBAL_CPH_SCOPE }],
+    source: 'krds',
+    holdingRoles: toHoldingRoles(account.cphAssociations),
     holdings: toHoldings(account.cphAssociations)
   })
 }
