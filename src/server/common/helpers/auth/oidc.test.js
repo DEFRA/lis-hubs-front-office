@@ -10,7 +10,9 @@ const { configGet, createOidcClient } = vi.hoisted(() => ({
   }))
 }))
 
-vi.mock('@defra/lis-hubs-infra-access/auth', () => ({ createOidcClient }))
+vi.mock('@defra/lis-hubs-infra-access/authentication', () => ({
+  createOidcClient
+}))
 vi.mock('#config/config.js', () => ({ config: { get: configGet } }))
 
 describe('#oidc', () => {

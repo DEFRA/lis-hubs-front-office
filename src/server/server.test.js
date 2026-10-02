@@ -7,11 +7,18 @@ import {
   test,
   vi
 } from 'vitest'
+import { HUB_AUTH_STRATEGY } from '@defra/lis-hubs-infra-access/authentication'
+
+import { krdsClient } from '#server/common/helpers/clients.js'
 
 describe('#frontOfficeServer', () => {
   const originalLogFormat = process.env.LOG_FORMAT
   let createServer
   let server
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
   beforeAll(async () => {
     process.env.LOG_FORMAT = 'pretty'
@@ -61,6 +68,38 @@ describe('#frontOfficeServer', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.result).toContain('Livestock Information')
+  })
+
+  test('Should redirect signed-out profile requests to login', async () => {
+    const response = await server.inject({
+      method: 'GET',
+      url: '/profile'
+    })
+
+    expect(response.statusCode).toBe(302)
+    expect(response.headers.location).toBe('/auth/login?returnUrl=%2Fprofile')
+  })
+
+  test('Should render the profile for signed-in users', async () => {
+    // Arrange
+    const fetchUserAccount = vi
+      .spyOn(krdsClient, 'fetchUserAccount')
+      .mockResolvedValue({ cphAssociations: [] })
+
+    // Act
+    const response = await server.inject({
+      method: 'GET',
+      url: '/profile',
+      auth: {
+        strategy: HUB_AUTH_STRATEGY,
+        credentials: { user: { sub: 'user-1' }, authorizedSpecies: [] }
+      }
+    })
+
+    // Assert
+    expect(response.statusCode).toBe(200)
+    expect(response.result).toContain('Profile and Settings')
+    expect(fetchUserAccount).toHaveBeenCalledWith('user-1')
   })
 
   test('Should render the holdings table', async () => {

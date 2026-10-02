@@ -15,11 +15,7 @@ function buildHoldingMapUrl(holding) {
 
 export const profileController = {
   async handler(request, h) {
-    const authenticatedUser = request?.app?.hubAuth
-
-    if (!authenticatedUser) {
-      return h.redirect('/auth/login?returnUrl=/profile')
-    }
+    const authenticatedUser = request.auth.credentials.user
 
     const account = await krdsClient.fetchUserAccount(authenticatedUser.sub)
     const userProfile = {

@@ -35,7 +35,10 @@ describe('#frontOfficeHomeController', () => {
     const view = vi.fn(() => 'rendered')
 
     // Act
-    const response = await homeController.handler({}, { view })
+    const response = await homeController.handler(
+      { auth: { isAuthenticated: false, credentials: null } },
+      { view }
+    )
 
     // Assert
     expect(response).toBe('rendered')
@@ -55,7 +58,9 @@ describe('#frontOfficeHomeController', () => {
   test('Should render the holdings view when the account has several holdings', async () => {
     // Arrange
     const view = vi.fn(() => 'rendered')
-    const request = { app: { hubAuth: { sub: 'user-1' } } }
+    const request = {
+      auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
+    }
     mocks.fetchUserAccount.mockResolvedValueOnce({
       cphAssociations: [
         {
@@ -106,7 +111,9 @@ describe('#frontOfficeHomeController', () => {
     // Arrange
     const view = vi.fn()
     const redirect = vi.fn(() => 'redirected')
-    const request = { app: { hubAuth: { sub: 'user-1' } } }
+    const request = {
+      auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
+    }
     mocks.fetchUserAccount.mockResolvedValueOnce({
       cphAssociations: [
         {
@@ -131,7 +138,9 @@ describe('#frontOfficeHomeController', () => {
   test('Should render the no-holdings view when the account has no associations', async () => {
     // Arrange
     const view = vi.fn(() => 'rendered')
-    const request = { app: { hubAuth: { sub: 'user-1' } } }
+    const request = {
+      auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
+    }
     mocks.fetchUserAccount.mockResolvedValueOnce({})
 
     // Act
@@ -146,7 +155,9 @@ describe('#frontOfficeHomeController', () => {
   test('Should propagate a krds failure for authenticated users', async () => {
     // Arrange
     const view = vi.fn()
-    const request = { app: { hubAuth: { sub: 'user-1' } } }
+    const request = {
+      auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
+    }
     mocks.fetchUserAccount.mockRejectedValueOnce(new Error('krds unavailable'))
 
     // Act
