@@ -16,3 +16,19 @@ export function toHoldings(cphAssociations = []) {
     })
   )
 }
+
+/**
+ * Maps krds's per-CPH associations onto the `{ role, cph }` grants
+ * resolveAuthorization expects, so each role applies only to its own CPH.
+ * The krds role name is translated to a LIS role by infra-access's role
+ * mappings; an unmapped role grants nothing.
+ *
+ * @param {{ cphNumber: string, role: string }[]} [cphAssociations]
+ * @returns {{ role: string, cph: string }[]}
+ */
+export function toHoldingRoles(cphAssociations = []) {
+  return cphAssociations.map(({ cphNumber, role }) => ({
+    role,
+    cph: cphNumber
+  }))
+}

@@ -133,6 +133,27 @@ describe('#frontOfficeServer', () => {
     )
   })
 
+  test('Should capitalise the KRDS role in the holdings table', async () => {
+    // Arrange
+    const context = {
+      pageTitle: 'My holdings',
+      holdings: [
+        {
+          countyParishHoldingNumber: '12/345/0001',
+          holdingName: 'Oakfield Farm',
+          roleName: 'owner'
+        }
+      ]
+    }
+
+    // Act
+    const result = await server.render('home/holdings', context)
+
+    // Assert
+    expect(result).toContain('<td class="govuk-table__cell">Owner</td>')
+    expect(result).not.toContain('<td class="govuk-table__cell">owner</td>')
+  })
+
   test('Should render the no-holdings page', async () => {
     const result = await server.render('home/no-holdings', {
       pageTitle: 'My holdings'
