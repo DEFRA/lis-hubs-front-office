@@ -1,4 +1,4 @@
-import { KrdsClient } from '@defra/lis-hubs-infra-access/krds-client'
+import { KrdsClient } from './krds-client.js'
 
 import { config } from '#config/config.js'
 
