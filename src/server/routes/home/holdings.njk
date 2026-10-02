@@ -17,7 +17,7 @@
       { html: cphHtml },
       { text: holding.holdingName } if holding.holdingName else { html: notSuppliedHtml },
       { text: holding.postcode } if holding.postcode else { html: notSuppliedHtml },
-      { text: holding.roleName }
+      { text: holding.roleName | capitalize }
     ]) -%}
   {%- endfor -%}
 
