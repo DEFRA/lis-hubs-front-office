@@ -5,7 +5,9 @@ import { toHoldings } from '#server/common/helpers/krds-mapping.js'
 
 export const homeController = {
   async handler(request, h) {
-    const authenticatedUser = request.app?.hubAuth
+    const authenticatedUser = request.auth.isAuthenticated
+      ? request.auth.credentials.user
+      : null
 
     if (!authenticatedUser) {
       return h.view('home/welcome', {

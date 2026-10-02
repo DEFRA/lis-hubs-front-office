@@ -1,5 +1,5 @@
 import hapi from '@hapi/hapi'
-import { verifyHubJwt } from '@defra/lis-hubs-infra-access/auth'
+import { verifyHubJwt } from '@defra/lis-hubs-infra-access/authentication'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const {

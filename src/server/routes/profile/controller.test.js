@@ -21,22 +21,6 @@ describe('#profileController', () => {
     vi.clearAllMocks()
   })
 
-  test('Should redirect unauthenticated users to the login flow', async () => {
-    const redirect = vi.fn(() => 'redirected')
-
-    const response = await profileController.handler(
-      {
-        app: {}
-      },
-      {
-        redirect
-      }
-    )
-
-    expect(response).toBe('redirected')
-    expect(redirect).toHaveBeenCalledWith('/auth/login?returnUrl=/profile')
-  })
-
   test('Should render the enriched front-office profile view for authenticated users', async () => {
     const authenticatedUser = {
       sub: 'test-user',
@@ -61,8 +45,9 @@ describe('#profileController', () => {
 
     const response = await profileController.handler(
       {
-        app: {
-          hubAuth: authenticatedUser
+        auth: {
+          isAuthenticated: true,
+          credentials: { user: authenticatedUser }
         }
       },
       {
@@ -117,8 +102,9 @@ describe('#profileController', () => {
 
     await profileController.handler(
       {
-        app: {
-          hubAuth: authenticatedUser
+        auth: {
+          isAuthenticated: true,
+          credentials: { user: authenticatedUser }
         }
       },
       {

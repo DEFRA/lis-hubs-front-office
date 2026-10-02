@@ -7,6 +7,7 @@ export const home = {
       server.route({
         method: 'GET',
         path: '/',
+        options: { auth: { mode: 'try' } },
         ...homeController
       })
     }

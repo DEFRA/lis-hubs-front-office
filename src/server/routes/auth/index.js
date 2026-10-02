@@ -1,9 +1,11 @@
 import {
-  createHubAuthPlugin,
-  createHubCookieOptions,
+  createHubAuth,
+  createHubCookieOptions
+} from '@defra/lis-hubs-infra-access/authentication'
+import {
   GLOBAL_CPH_SCOPE,
   resolveAuthorization
-} from '@defra/lis-hubs-infra-access/auth'
+} from '@defra/lis-hubs-infra-access/authorization'
 
 import { config } from '#config/config.js'
 import { krdsClient } from '#server/common/helpers/clients.js'
@@ -54,7 +56,7 @@ function getHubJwtConfig() {
   }
 }
 
-export const auth = createHubAuthPlugin({
+export const auth = createHubAuth({
   getHubJwtCookieName,
   getCookieOptions,
   getHubJwtConfig,
