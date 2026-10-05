@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { krdsClient } from '#server/common/helpers/clients.js'
+import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
 
 const { moduleDefinitions, speciesDefinitions } = vi.hoisted(() => ({
   moduleDefinitions: [{ id: 'cattle-home' }, { id: 'sheep-home' }],
@@ -17,12 +17,12 @@ vi.mock('@defra/lis-hubs-infra-registry', () => ({
   MODULES: moduleDefinitions,
   SPECIES: speciesDefinitions
 }))
-vi.mock('#server/common/helpers/clients.js')
+vi.mock('#server/common/helpers/cattle-home-be4fe-client.js')
 
 import { homeController } from './controller.js'
 
 const mocks = {
-  fetchUserAccount: vi.mocked(krdsClient.fetchUserAccount)
+  getUserDetails: vi.mocked(cattleHomeBe4FeClient.getUserDetails)
 }
 
 describe('#frontOfficeHomeController', () => {
@@ -42,7 +42,7 @@ describe('#frontOfficeHomeController', () => {
 
     // Assert
     expect(response).toBe('rendered')
-    expect(mocks.fetchUserAccount).not.toHaveBeenCalled()
+    expect(mocks.getUserDetails).not.toHaveBeenCalled()
     expect(view).toHaveBeenCalledWith(
       'home/welcome',
       expect.objectContaining({
@@ -55,27 +55,26 @@ describe('#frontOfficeHomeController', () => {
     )
   })
 
-  test('Should render the holdings view when the account has several holdings', async () => {
+  test('Should render the holdings view when the user has several holdings', async () => {
     // Arrange
     const view = vi.fn(() => 'rendered')
     const request = {
       auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
     }
-    mocks.fetchUserAccount.mockResolvedValueOnce({
-      cphAssociations: [
+    mocks.getUserDetails.mockResolvedValueOnce({
+      subject: 'user-1',
+      cphs: [
         {
-          id: 'association-1',
-          cphNumber: '12/345/0001',
+          cph: '12/345/0001',
           role: 'Owner',
-          holdingId: 'holding-1',
-          holdingName: 'Oakfield Farm'
+          holding_id: 'holding-1',
+          holding_name: 'Oakfield Farm'
         },
         {
-          id: 'association-2',
-          cphNumber: '24/118/0042',
+          cph: '24/118/0042',
           role: 'Agent',
-          holdingId: 'holding-2',
-          holdingName: 'Willow Brook Farm'
+          holding_id: 'holding-2',
+          holding_name: 'Willow Brook Farm'
         }
       ]
     })
@@ -85,19 +84,17 @@ describe('#frontOfficeHomeController', () => {
 
     // Assert
     expect(response).toBe('rendered')
-    expect(mocks.fetchUserAccount).toHaveBeenCalledWith('user-1')
+    expect(mocks.getUserDetails).toHaveBeenCalledWith('user-1')
     expect(view).toHaveBeenCalledWith('home/holdings', {
       pageTitle: 'My holdings',
       holdings: [
         {
-          id: 'association-1',
           countyParishHoldingId: 'holding-1',
           countyParishHoldingNumber: '12/345/0001',
           holdingName: 'Oakfield Farm',
           roleName: 'Owner'
         },
         {
-          id: 'association-2',
           countyParishHoldingId: 'holding-2',
           countyParishHoldingNumber: '24/118/0042',
           holdingName: 'Willow Brook Farm',
@@ -107,21 +104,21 @@ describe('#frontOfficeHomeController', () => {
     })
   })
 
-  test('Should redirect to the cattle holding page when the account has a single holding', async () => {
+  test('Should redirect to the cattle holding page when the user has a single holding', async () => {
     // Arrange
     const view = vi.fn()
     const redirect = vi.fn(() => 'redirected')
     const request = {
       auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
     }
-    mocks.fetchUserAccount.mockResolvedValueOnce({
-      cphAssociations: [
+    mocks.getUserDetails.mockResolvedValueOnce({
+      subject: 'user-1',
+      cphs: [
         {
-          id: 'association-1',
-          cphNumber: '12/345/0001',
+          cph: '12/345/0001',
           role: 'Owner',
-          holdingId: 'holding-1',
-          holdingName: 'Oakfield Farm'
+          holding_id: 'holding-1',
+          holding_name: 'Oakfield Farm'
         }
       ]
     })
@@ -135,13 +132,13 @@ describe('#frontOfficeHomeController', () => {
     expect(view).not.toHaveBeenCalled()
   })
 
-  test('Should render the no-holdings view when the account has no associations', async () => {
+  test('Should render the no-holdings view when the user has no CPHs', async () => {
     // Arrange
     const view = vi.fn(() => 'rendered')
     const request = {
       auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
     }
-    mocks.fetchUserAccount.mockResolvedValueOnce({})
+    mocks.getUserDetails.mockResolvedValueOnce({ subject: 'user-1', cphs: [] })
 
     // Act
     await homeController.handler(request, { view })
@@ -152,13 +149,30 @@ describe('#frontOfficeHomeController', () => {
     })
   })
 
-  test('Should propagate a krds failure for authenticated users', async () => {
+  test('Should render the no-holdings view when the BE4FE does not know the user', async () => {
+    // Arrange
+    const view = vi.fn(() => 'rendered')
+    const request = {
+      auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
+    }
+    mocks.getUserDetails.mockResolvedValueOnce(null)
+
+    // Act
+    await homeController.handler(request, { view })
+
+    // Assert
+    expect(view).toHaveBeenCalledWith('home/no-holdings', {
+      pageTitle: 'My holdings'
+    })
+  })
+
+  test('Should propagate a BE4FE failure for authenticated users', async () => {
     // Arrange
     const view = vi.fn()
     const request = {
       auth: { isAuthenticated: true, credentials: { user: { sub: 'user-1' } } }
     }
-    mocks.fetchUserAccount.mockRejectedValueOnce(new Error('krds unavailable'))
+    mocks.getUserDetails.mockRejectedValueOnce(new Error('be4fe unavailable'))
 
     // Act
     let error
@@ -169,7 +183,7 @@ describe('#frontOfficeHomeController', () => {
     }
 
     // Assert
-    expect(error).toEqual(new Error('krds unavailable'))
+    expect(error).toEqual(new Error('be4fe unavailable'))
     expect(view).not.toHaveBeenCalled()
   })
 })

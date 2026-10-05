@@ -229,6 +229,21 @@ export const config = convict({
       sensitive: true
     }
   },
+  cattleHomeApi: {
+    apiKey: {
+      doc: 'API key sent to the cattle-home BE4FE as x-api-key',
+      format: String,
+      default: '',
+      env: 'CATTLE_HOME_API_KEY',
+      sensitive: true
+    },
+    timeout: {
+      doc: 'Timeout in milliseconds for cattle-home BE4FE API requests',
+      format: 'nat',
+      default: 5000,
+      env: 'CATTLE_HOME_API_TIMEOUT'
+    }
+  },
   krds: {
     url: {
       doc: 'keeper-data-api (krds) endpoint used to enrich hub auth sessions',

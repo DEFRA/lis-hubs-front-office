@@ -1,7 +1,7 @@
 import { MODULES, SPECIES } from '@defra/lis-hubs-infra-registry'
 
-import { krdsClient } from '#server/common/helpers/clients.js'
-import { toHoldings } from '#server/common/helpers/krds-mapping.js'
+import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
+import { toHoldingsFromUserCphs } from '#server/common/helpers/cattle-home-be4fe-mapping.js'
 
 export const homeController = {
   async handler(request, h) {
@@ -18,8 +18,10 @@ export const homeController = {
         loginUrl: '/auth/login?returnUrl=/'
       })
     }
-    const account = await krdsClient.fetchUserAccount(authenticatedUser.sub)
-    const holdings = toHoldings(account.cphAssociations)
+    const userDetails = await cattleHomeBe4FeClient.getUserDetails(
+      authenticatedUser.sub
+    )
+    const holdings = toHoldingsFromUserCphs(userDetails?.cphs)
 
     if (holdings.length === 0) {
       return h.view('home/no-holdings', {

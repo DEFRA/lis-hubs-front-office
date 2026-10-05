@@ -73,36 +73,6 @@ export class KrdsClient {
     return result.payload
   }
 
-  /**
-   * Reads a user account by identity provider subject. Read only - no
-   * association refresh is performed.
-   *
-   * @param {string} subject
-   * @returns {Promise<UserAccount>}
-   */
-  async fetchUserAccount(subject) {
-    let result
-
-    try {
-      result = await Wreck.get(
-        `api/v2/user-accounts/${encodeURIComponent(subject)}`,
-        {
-          baseUrl: this.#baseUrl,
-          json: true,
-          headers: this.#getHeaders()
-        }
-      )
-    } catch (err) {
-      throw this.#parseError(err.output?.statusCode, err.data?.payload)
-    }
-
-    if (result.res.statusCode >= statusCodes.badRequest) {
-      throw this.#parseError(result.res.statusCode, result.payload)
-    }
-
-    return result.payload
-  }
-
   #getHeaders() {
     const credentials = Buffer.from(
       `${this.#clientId}:${this.#clientSecret}`
