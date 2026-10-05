@@ -9,7 +9,7 @@ import {
 } from 'vitest'
 import { HUB_AUTH_STRATEGY } from '@defra/lis-hubs-infra-access/authentication'
 
-import { krdsClient } from '#server/common/helpers/clients.js'
+import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
 
 describe('#frontOfficeServer', () => {
   const originalLogFormat = process.env.LOG_FORMAT
@@ -82,9 +82,9 @@ describe('#frontOfficeServer', () => {
 
   test('Should render the profile for signed-in users', async () => {
     // Arrange
-    const fetchUserAccount = vi
-      .spyOn(krdsClient, 'fetchUserAccount')
-      .mockResolvedValue({ cphAssociations: [] })
+    const getUserDetails = vi
+      .spyOn(cattleHomeBe4FeClient, 'getUserDetails')
+      .mockResolvedValue({ subject: 'user-1', cphs: [] })
 
     // Act
     const response = await server.inject({
@@ -99,7 +99,7 @@ describe('#frontOfficeServer', () => {
     // Assert
     expect(response.statusCode).toBe(200)
     expect(response.result).toContain('Profile and Settings')
-    expect(fetchUserAccount).toHaveBeenCalledWith('user-1')
+    expect(getUserDetails).toHaveBeenCalledWith('user-1')
   })
 
   test('Should render the holdings table', async () => {

@@ -1,8 +1,8 @@
 import { config } from '#config/config.js'
-import { krdsClient } from '#server/common/helpers/clients.js'
-import { toHoldings } from '#server/common/helpers/krds-mapping.js'
+import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
+import { toHoldingsFromUserCphs } from '#server/common/helpers/cattle-home-be4fe-mapping.js'
 
-// krds has no geo data today, so this always returns null - kept so a
+// The BE4FE has no geo data today, so this always returns null - kept so a
 // holding's mapUrl can be wired up again once coordinates exist.
 function buildHoldingMapUrl(holding) {
   if (!holding.longitude || !holding.latitude) {
@@ -17,10 +17,12 @@ export const profileController = {
   async handler(request, h) {
     const authenticatedUser = request.auth.credentials.user
 
-    const account = await krdsClient.fetchUserAccount(authenticatedUser.sub)
+    const userDetails = await cattleHomeBe4FeClient.getUserDetails(
+      authenticatedUser.sub
+    )
     const userProfile = {
       user: authenticatedUser,
-      holdings: toHoldings(account.cphAssociations)
+      holdings: toHoldingsFromUserCphs(userDetails?.cphs)
     }
 
     for (const holding of userProfile.holdings) {

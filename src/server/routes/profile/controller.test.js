@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const { fetchUserAccount } = vi.hoisted(() => ({
-  fetchUserAccount: vi.fn()
+const { getUserDetails } = vi.hoisted(() => ({
+  getUserDetails: vi.fn()
 }))
 
-vi.mock('#server/common/helpers/clients.js', () => ({
-  krdsClient: { fetchUserAccount }
+vi.mock('#server/common/helpers/cattle-home-be4fe-client.js', () => ({
+  cattleHomeBe4FeClient: { getUserDetails }
 }))
 
 vi.mock('#config/config.js', () => ({
@@ -29,19 +29,19 @@ describe('#profileController', () => {
       email: 'test.user@example.com'
     }
     const account = {
-      cphAssociations: [
+      subject: 'test-user',
+      cphs: [
         {
-          id: 'association-1',
-          holdingId: 'holding-1',
-          cphNumber: '12/345/6789',
+          holding_id: 'holding-1',
+          cph: '12/345/6789',
           role: 'owner',
-          holdingName: 'Oakfield Farm'
+          holding_name: 'Oakfield Farm'
         }
       ]
     }
     const view = vi.fn(() => 'rendered')
 
-    fetchUserAccount.mockResolvedValue(account)
+    getUserDetails.mockResolvedValue(account)
 
     const response = await profileController.handler(
       {
@@ -56,7 +56,7 @@ describe('#profileController', () => {
     )
 
     expect(response).toBe('rendered')
-    expect(fetchUserAccount).toHaveBeenCalledWith(authenticatedUser.sub)
+    expect(getUserDetails).toHaveBeenCalledWith(authenticatedUser.sub)
     expect(view).toHaveBeenCalledWith(
       'profile/index',
       expect.objectContaining({
@@ -84,13 +84,13 @@ describe('#profileController', () => {
       email: 'test.user@example.com'
     }
     const account = {
-      cphAssociations: [
+      subject: 'test-user',
+      cphs: [
         {
-          id: 'association-1',
-          holdingId: 'holding-1',
-          cphNumber: '12/345/6789',
+          holding_id: 'holding-1',
+          cph: '12/345/6789',
           role: 'owner',
-          holdingName: 'Oakfield Farm',
+          holding_name: 'Oakfield Farm',
           longitude: -3.51,
           latitude: 54.21
         }
@@ -98,7 +98,7 @@ describe('#profileController', () => {
     }
     const view = vi.fn(() => 'rendered')
 
-    fetchUserAccount.mockResolvedValue(account)
+    getUserDetails.mockResolvedValue(account)
 
     await profileController.handler(
       {
@@ -124,5 +124,47 @@ describe('#profileController', () => {
         })
       })
     )
+  })
+
+  test('Should render no holdings when the BE4FE does not know the user', async () => {
+    // Arrange
+    const authenticatedUser = { sub: 'test-user' }
+    const view = vi.fn(() => 'rendered')
+    getUserDetails.mockResolvedValueOnce(null)
+
+    // Act
+    await profileController.handler(
+      { auth: { credentials: { user: authenticatedUser } } },
+      { view }
+    )
+
+    // Assert
+    expect(view).toHaveBeenCalledWith(
+      'profile/index',
+      expect.objectContaining({
+        userProfile: { user: authenticatedUser, holdings: [] }
+      })
+    )
+  })
+
+  test('Should propagate a BE4FE failure', async () => {
+    // Arrange
+    const view = vi.fn()
+    getUserDetails.mockRejectedValueOnce(new Error('be4fe unavailable'))
+
+    // Act
+    let error
+    try {
+      await profileController.handler(
+        { auth: { credentials: { user: { sub: 'test-user' } } } },
+        { view }
+      )
+    } catch (e) {
+      error = e
+    }
+
+    // Assert
+    expect(error).toEqual(new Error('be4fe unavailable'))
+    expect(view).not.toHaveBeenCalled()
   })
 })
