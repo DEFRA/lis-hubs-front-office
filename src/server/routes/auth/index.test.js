@@ -47,7 +47,9 @@ function createConfigValueMap() {
     'auth.hubJwt.issuer': jwtConfig.issuer,
     'auth.hubJwt.audience': jwtConfig.audience,
     'auth.hubJwt.ttlSeconds': 14400,
-    'session.cookie.secure': false
+    'session.cookie.secure': false,
+    'auth.allowList.enabled': false,
+    'auth.allowList.emails': []
   }
 }
 
@@ -159,6 +161,76 @@ describe('#frontOfficeAuthRoutes', () => {
       }
     ])
     expect(payload.authzVersion).toBe(1)
+  })
+
+  test('Should refuse a user who is not on the allow-list without a session or krds account', async () => {
+    const configValues = {
+      ...createConfigValueMap(),
+      'auth.allowList.enabled': true,
+      'auth.allowList.emails': ['keeper@example.com']
+    }
+    configGet.mockImplementation((path) => configValues[path])
+    const user = { sub: 'test-user', email: 'someone.else@example.com' }
+
+    buildLogoutUrl.mockResolvedValue('https://defra-ci.example.test/logout')
+
+    completeAuthorizationCodeGrant.mockResolvedValue({
+      user,
+      authSession: { ...user, idToken: 'id-token' },
+      accessToken: 'access-token',
+      returnUrl: '/dashboard'
+    })
+
+    const server = await createTestServer()
+    const response = await server.inject({
+      method: 'GET',
+      url: '/sso'
+    })
+
+    await server.stop({ timeout: 0 })
+
+    expect(response.statusCode).toBe(302)
+    expect(response.headers.location).toBe(
+      'https://defra-ci.example.test/logout'
+    )
+    expect(buildLogoutUrl.mock.calls[0][1]).toEqual({
+      authSession: { ...user, idToken: 'id-token' },
+      returnPath: '/auth/access-denied'
+    })
+    expect(ensureAccount).not.toHaveBeenCalled()
+    expect(
+      extractCookieValue(response.headers['set-cookie'], 'livestock_hub_jwt')
+    ).toBe('')
+  })
+
+  test('Should let a user on the allow-list sign in', async () => {
+    const configValues = {
+      ...createConfigValueMap(),
+      'auth.allowList.enabled': true,
+      'auth.allowList.emails': ['keeper@example.com']
+    }
+    configGet.mockImplementation((path) => configValues[path])
+    const user = { sub: 'test-user', email: 'Keeper@example.com' }
+
+    completeAuthorizationCodeGrant.mockResolvedValue({
+      user,
+      authSession: { ...user, idToken: 'id-token' },
+      accessToken: 'access-token',
+      returnUrl: '/dashboard'
+    })
+    ensureAccount.mockResolvedValue({ cphAssociations: [] })
+
+    const server = await createTestServer()
+    const response = await server.inject({
+      method: 'GET',
+      url: '/sso'
+    })
+
+    await server.stop({ timeout: 0 })
+
+    expect(response.statusCode).toBe(302)
+    expect(response.headers.location).toBe('/dashboard')
+    expect(ensureAccount).toHaveBeenCalled()
   })
 
   test('Should redirect to the provider authorization URL for a new front-office login', async () => {
