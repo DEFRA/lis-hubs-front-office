@@ -273,6 +273,21 @@ export const config = convict({
       default: 'http://localhost:3101',
       env: 'HUB_ORIGIN'
     },
+    allowList: {
+      enabled: {
+        doc: 'Only let users on the allow-list sign in to the front office',
+        format: Boolean,
+        default: false,
+        env: 'AUTH_ALLOW_LIST_ENABLED'
+      },
+      emails: {
+        doc: 'Comma-separated email addresses allowed to sign in when the allow-list is enabled',
+        format: Array,
+        default: [],
+        env: 'AUTH_ALLOW_LIST_EMAILS',
+        sensitive: true
+      }
+    },
     hubJwt: {
       cookieName: {
         doc: 'Cookie name that carries the hub-issued JWT',
