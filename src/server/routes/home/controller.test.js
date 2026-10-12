@@ -47,7 +47,7 @@ describe('#frontOfficeHomeController', () => {
       'home/welcome',
       expect.objectContaining({
         pageTitle: 'Welcome',
-        heading: 'Livestock Information',
+        heading: 'Livestock Information Service (LIS) for cattle',
         loginUrl: '/auth/login?returnUrl=/',
         supportedSpecies: speciesDefinitions,
         supportedSpokes: moduleDefinitions
