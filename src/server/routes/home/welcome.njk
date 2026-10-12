@@ -7,11 +7,34 @@
         {{ heading }}
       </h1>
 
-      <p>Use this service to manage the following species:</p>
+      <p>
+        Report cattle births, movements and deaths, browse your animal’s digital record and manage your holding details.
+      </p>
+    </div>
+  </div>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+    <p class="govuk-body">Use this service to:</p>
+
       <ul class="govuk-list govuk-list--bullet">
-        {% for species in supportedSpecies %}
-          <li>{{ species.label }}</li>
-        {% endfor %}
+        <li>Report births, deaths and movements of your cattle</li>
+        <li>Maintain an online record of animals on your holding</li>
+        <li>View an animal's digital record</li>
+        <li>Edit animal details (where allowed)</li>
+        <li>View and update your holding details</li>
+      </ul>
+
+      <h2 class="govuk-heading-m">Sign in or create an account</h2>
+
+      <p class="govuk-body">
+        You’ll need to sign into your Defra account to use the Livestock Information Service. If you do not have an account, you will be able to create one.
+      </p>
+
+      <p class="govuk-body">To create an account, you'll need:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>your County Parish Holding (CPH) number</li>
+        <li>your email address associated with the CPH number</li>
+        <li>to be registered as a cattle keeper with the Rural Payments Agency (RPA) and the Animal and Plant Health Agency (APHA)</li>
       </ul>
 
       {{ govukButton({
@@ -21,55 +44,51 @@
       }) }}
 
       <h2 class="govuk-heading-m">
-        Before you start
+        About the Livestock Information Service
       </h2>
 
-      <p>
-        If you're using the service for the first time, you can choose to create an account.
-        You can also call the Livestock Information helpline to use the service without an account.
+      <p class="govuk-body">
+        The Livestock Information Service (LIS) is the official cattle traceability service for England – replacing the Cattle Tracing System (CTS) managed by the British Cattle Movement Service (BCMS).
       </p>
 
-      <p>
-        You'll need to already be <a href="#" class="govuk-link">registered with the Animal and Plant Health Agency (APHA) and have a flock or herd mark.</a>
+      <p class="govuk-body">
+        LIS provides a secure, single sign-on platform for livestock keepers and those across the supply chain to report cattle births, movements and deaths in England.
       </p>
 
-      <p>
-        You'll need:
-      </p>
-
-      <ul class="govuk-list govuk-list--bullet">
-        <li>your county parish holding (CPH) number</li>
-        <li>the email address you used to register your CPH number</li>
-      </ul>
-
-      <h2 class="govuk-heading-m">
-        Get help
-      </h2>
-
-      <p>
-        Contact the Livestock Information helpline.
-      </p>
-      <p>
-        Livestock Information Helpline<br>
-        email@rpa.gov.uk<br>
-        0345 050 1234<br>
-        Monday to Friday, 8:30am to <br>
-        Find out about call charges
-      </p>
     </div>
-    <div class="govuk-grid-column-one-third"></div>
-  </div>
 
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-      <div class="govuk-inset-text">
-        <h2 class="govuk-heading-m">DEV: Supported spokes</h2>
-        <ul class="govuk-list govuk-list--bullet" data-testid="supported-spoke-registry">
-          {% for spoke in supportedSpokes %}
-            <li><pre>{{ spoke.id }}</pre></li>
-          {% endfor %}
-        </ul>
-      </div>
+    <div class="govuk-grid-column-one-third">
+
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <h2 class="govuk-heading-s" id="subsection-title">
+          Related content
+        </h2>
+        <nav role="navigation" aria-labelledby="subsection-title">
+          <ul class="govuk-list govuk-!-font-size-16">
+            <li>
+              <a href="https://www.gov.uk/guidance/get-a-cattle-passport">
+                Apply for, correct or replace a cattle passport
+              </a>
+            </li>
+            <li>
+              <a href="https://www.gov.uk/government/collections/keeping-cattle-bison-and-buffalo-in-england-and-wales">
+                Keeping cattle, bison and buffalo in England and Wales
+              </a>
+            </li>
+            <li>
+              <a href="https://www.gov.uk/guidance/moving-cattle-what-cattle-keepers-need-to-know">
+                Moving cattle: what cattle keepers need to know
+              </a>
+            </li>
+            <li>
+              <a href="https://www.gov.uk/government/publications/template-holding-register-for-cattle-keepers">
+                Template holding register for cattle keepers
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
     </div>
   </div>
 {% endblock %}

@@ -12,7 +12,7 @@ export const homeController = {
     if (!authenticatedUser) {
       return h.view('home/welcome', {
         pageTitle: 'Welcome',
-        heading: 'Livestock Information',
+        heading: 'Livestock Information Service (LIS) for cattle',
         supportedSpecies: SPECIES,
         supportedSpokes: MODULES,
         loginUrl: '/auth/login?returnUrl=/'
