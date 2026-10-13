@@ -8,11 +8,11 @@ import { logger } from '@defra/lis-hubs-infra-core'
 
 import { config } from '#config/config.js'
 import { isAllowListed } from '#server/common/helpers/auth/allow-list.js'
-import { krdsClient } from '#server/common/helpers/clients.js'
+import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
 import {
-  toHoldingRoles,
-  toHoldings
-} from '#server/common/helpers/krds-mapping.js'
+  toHoldingRolesFromUserCphs,
+  toHoldingsFromUserCphs
+} from '#server/common/helpers/cattle-home-be4fe-mapping.js'
 import {
   buildAuthorizationUrl,
   buildLogoutUrl,
@@ -21,11 +21,11 @@ import {
 
 export const ACCESS_DENIED_PATH = '/auth/access-denied'
 
-// Roles come from krds's per-CPH associations, so a user's access to a
-// holding is scoped to the CPHs krds says they hold a role on.
+// Roles come from the BE4FE's per-user CPHs, so a user's access to a
+// holding is scoped to the CPHs it says they hold a role on.
 
 async function resolveAuthSession({ user }) {
-  // Checked before krds so no account is created for a refused user. The
+  // Checked before the BE4FE so no account is created for a refused user. The
   // log line carries user_email_hash from the OIDC grant, not the email.
   if (!isAllowListed(user.email)) {
     logger.info('Front-office login refused: user is not on the allow-list')
@@ -33,7 +33,7 @@ async function resolveAuthSession({ user }) {
     return { denied: true }
   }
 
-  const account = await krdsClient.ensureAccount({
+  const userDetails = await cattleHomeBe4FeClient.createUser({
     sub: user.sub,
     email: user.email,
     given_name: user.firstName,
@@ -42,8 +42,8 @@ async function resolveAuthSession({ user }) {
 
   return resolveAuthorization({
     source: 'krds',
-    holdingRoles: toHoldingRoles(account.cphAssociations),
-    holdings: toHoldings(account.cphAssociations)
+    holdingRoles: toHoldingRolesFromUserCphs(userDetails.cphs),
+    holdings: toHoldingsFromUserCphs(userDetails.cphs)
   })
 }
 

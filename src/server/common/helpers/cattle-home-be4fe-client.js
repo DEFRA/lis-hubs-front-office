@@ -61,6 +61,18 @@ class CattleHomeBe4FeClient extends BaseClient {
       throw error
     }
   }
+
+  /**
+   * Creates the user's account from their identity provider claims, or
+   * refreshes it if it already exists. Called on every successful logon.
+   *
+   * @param {{ sub: string, email: string, given_name?: string | null, family_name?: string | null }} claims
+   * @returns {Promise<UserDetails>} the user's details and the CPHs they hold
+   */
+  async createUser(claims) {
+    const { payload } = await this._post('api/users', { payload: claims })
+    return payload.data
+  }
 }
 
 export const cattleHomeBe4FeClient = new CattleHomeBe4FeClient({

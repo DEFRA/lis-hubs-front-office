@@ -1,6 +1,44 @@
 import { describe, expect, test } from 'vitest'
 
-import { toHoldingsFromUserCphs } from './cattle-home-be4fe-mapping.js'
+import {
+  toHoldingRolesFromUserCphs,
+  toHoldingsFromUserCphs
+} from './cattle-home-be4fe-mapping.js'
+
+describe('toHoldingRolesFromUserCphs()', () => {
+  test('maps each BE4FE CPH onto a role grant for that CPH', () => {
+    // Arrange
+    const cphs = [
+      {
+        cph: '12/345/0001',
+        holding_id: 'holding-1',
+        holding_name: 'Oakfield Farm',
+        role: 'owner'
+      },
+      { cph: '24/118/0042', role: 'keeper' }
+    ]
+
+    // Act
+    const result = toHoldingRolesFromUserCphs(cphs)
+
+    // Assert
+    expect(result).toEqual([
+      { role: 'owner', cph: '12/345/0001' },
+      { role: 'keeper', cph: '24/118/0042' }
+    ])
+  })
+
+  test('returns an empty array when no CPHs are given', () => {
+    // Arrange
+    const cphs = undefined
+
+    // Act
+    const result = toHoldingRolesFromUserCphs(cphs)
+
+    // Assert
+    expect(result).toEqual([])
+  })
+})
 
 describe('toHoldingsFromUserCphs()', () => {
   test('maps BE4FE CPHs onto the hub holdings shape', () => {

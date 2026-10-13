@@ -7,17 +7,17 @@ const {
   buildLogoutUrl,
   completeAuthorizationCodeGrant,
   configGet,
-  ensureAccount
+  createUser
 } = vi.hoisted(() => ({
   buildAuthorizationUrl: vi.fn(),
   buildLogoutUrl: vi.fn(),
   completeAuthorizationCodeGrant: vi.fn(),
   configGet: vi.fn(),
-  ensureAccount: vi.fn()
+  createUser: vi.fn()
 }))
 
-vi.mock('#server/common/helpers/clients.js', () => ({
-  krdsClient: { ensureAccount }
+vi.mock('#server/common/helpers/cattle-home-be4fe-client.js', () => ({
+  cattleHomeBe4FeClient: { createUser }
 }))
 
 vi.mock('#config/config.js', () => ({
@@ -103,14 +103,17 @@ describe('#frontOfficeAuthRoutes', () => {
       idToken: 'id-token',
       authenticatedAt: '2026-05-15T10:00:00.000Z'
     }
-    const cphAssociation = {
-      id: 'association-1',
-      cphNumber: '10/081/1234',
-      role: 'owner',
-      holdingId: 'holding-1',
-      holdingName: 'Oakfield Farm'
+    const userDetails = {
+      subject: user.sub,
+      cphs: [
+        {
+          cph: '10/081/1234',
+          role: 'owner',
+          holding_id: 'holding-1',
+          holding_name: 'Oakfield Farm'
+        }
+      ]
     }
-    const account = { cphAssociations: [cphAssociation] }
 
     completeAuthorizationCodeGrant.mockResolvedValue({
       user,
@@ -118,7 +121,7 @@ describe('#frontOfficeAuthRoutes', () => {
       accessToken: 'access-token',
       returnUrl: '/dashboard'
     })
-    ensureAccount.mockResolvedValue(account)
+    createUser.mockResolvedValue(userDetails)
 
     const server = await createTestServer()
     const response = await server.inject({
@@ -130,7 +133,7 @@ describe('#frontOfficeAuthRoutes', () => {
 
     expect(response.statusCode).toBe(302)
     expect(response.headers.location).toBe('/dashboard')
-    expect(ensureAccount).toHaveBeenCalledWith({
+    expect(createUser).toHaveBeenCalledWith({
       sub: user.sub,
       email: user.email,
       given_name: user.firstName,
@@ -153,7 +156,6 @@ describe('#frontOfficeAuthRoutes', () => {
     expect('permissionAssignments' in payload).toBe(false)
     expect(payload.holdings).toEqual([
       {
-        id: 'association-1',
         countyParishHoldingId: 'holding-1',
         countyParishHoldingNumber: '10/081/1234',
         holdingName: 'Oakfield Farm',
@@ -163,7 +165,7 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(payload.authzVersion).toBe(1)
   })
 
-  test('Should refuse a user who is not on the allow-list without a session or krds account', async () => {
+  test('Should refuse a user who is not on the allow-list without a session or user account', async () => {
     const configValues = {
       ...createConfigValueMap(),
       'auth.allowList.enabled': true,
@@ -197,7 +199,7 @@ describe('#frontOfficeAuthRoutes', () => {
       authSession: { ...user, idToken: 'id-token' },
       returnPath: '/auth/access-denied'
     })
-    expect(ensureAccount).not.toHaveBeenCalled()
+    expect(createUser).not.toHaveBeenCalled()
     expect(
       extractCookieValue(response.headers['set-cookie'], 'livestock_hub_jwt')
     ).toBe('')
@@ -218,7 +220,7 @@ describe('#frontOfficeAuthRoutes', () => {
       accessToken: 'access-token',
       returnUrl: '/dashboard'
     })
-    ensureAccount.mockResolvedValue({ cphAssociations: [] })
+    createUser.mockResolvedValue({ subject: user.sub, cphs: [] })
 
     const server = await createTestServer()
     const response = await server.inject({
@@ -230,7 +232,32 @@ describe('#frontOfficeAuthRoutes', () => {
 
     expect(response.statusCode).toBe(302)
     expect(response.headers.location).toBe('/dashboard')
-    expect(ensureAccount).toHaveBeenCalled()
+    expect(createUser).toHaveBeenCalled()
+  })
+
+  test('Should not issue a hub JWT when the user account cannot be created', async () => {
+    const user = { sub: 'test-user', email: 'test.user@example.com' }
+    const conflictError = new Error('409 - Email is bound to another account')
+    conflictError.statusCode = 409
+
+    completeAuthorizationCodeGrant.mockResolvedValue({
+      user,
+      authSession: { ...user, idToken: 'id-token' },
+      accessToken: 'access-token',
+      returnUrl: '/dashboard'
+    })
+    createUser.mockRejectedValue(conflictError)
+
+    const server = await createTestServer()
+    const response = await server.inject({
+      method: 'GET',
+      url: '/sso'
+    })
+
+    await server.stop({ timeout: 0 })
+
+    expect(response.statusCode).toBeGreaterThanOrEqual(400)
+    expect(response.headers['set-cookie']).toBeUndefined()
   })
 
   test('Should redirect to the provider authorization URL for a new front-office login', async () => {
