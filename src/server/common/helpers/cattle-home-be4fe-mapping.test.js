@@ -66,6 +66,55 @@ describe('toHoldingsFromUserCphs()', () => {
     ])
   })
 
+  test('combines the roles of one CPH listed more than once into one holding', () => {
+    // Arrange
+    const cphs = [
+      {
+        cph: '12/345/0001',
+        holding_id: 'holding-1',
+        holding_name: 'Oakfield Farm',
+        role: 'Owner'
+      },
+      {
+        cph: '12/345/0002',
+        holding_id: 'holding-2',
+        holding_name: 'Fairfield Farm',
+        role: 'Keeper'
+      },
+      {
+        cph: '12/345/0001',
+        holding_id: 'holding-1',
+        holding_name: 'Oakfield Farm',
+        role: 'Keeper'
+      },
+      {
+        cph: '12/345/0001',
+        holding_id: 'holding-1',
+        holding_name: 'Oakfield Farm',
+        role: 'Keeper'
+      }
+    ]
+
+    // Act
+    const result = toHoldingsFromUserCphs(cphs)
+
+    // Assert
+    expect(result).toEqual([
+      {
+        countyParishHoldingId: 'holding-1',
+        countyParishHoldingNumber: '12/345/0001',
+        holdingName: 'Oakfield Farm',
+        roleName: 'Owner, Keeper'
+      },
+      {
+        countyParishHoldingId: 'holding-2',
+        countyParishHoldingNumber: '12/345/0002',
+        holdingName: 'Fairfield Farm',
+        roleName: 'Keeper'
+      }
+    ])
+  })
+
   test('preserves null and missing optional fields', () => {
     // Arrange
     const cphs = [

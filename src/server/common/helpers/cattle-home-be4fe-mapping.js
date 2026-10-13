@@ -4,27 +4,44 @@
 
 /**
  * Maps the BE4FE's per-user CPHs onto the countyParishHoldingNumber shape
- * the home and profile views expect.
+ * the home view expects: one holding per CPH, with the user's roles on
+ * that CPH joined in the order the BE4FE gave them.
  *
  * @param {UserHolding[]} [cphs]
  * @returns {{ countyParishHoldingId: string | null | undefined, countyParishHoldingNumber: string, holdingName: string | null | undefined, roleName: string | null | undefined }[]}
  */
 export function toHoldingsFromUserCphs(cphs = []) {
-  return cphs.map(
-    ({
-      cph,
-      holding_id: holdingId,
-      holding_name: holdingName,
-      role,
-      ...rest
-    }) => ({
-      ...rest,
-      countyParishHoldingId: holdingId,
-      countyParishHoldingNumber: cph,
-      holdingName,
-      roleName: role
-    })
-  )
+  const holdingsByCph = new Map()
+
+  for (const {
+    cph,
+    holding_id: holdingId,
+    holding_name: holdingName,
+    role,
+    ...rest
+  } of cphs) {
+    const holding = holdingsByCph.get(cph)
+
+    if (holding) {
+      if (role && !holding.roles.includes(role)) {
+        holding.roles.push(role)
+      }
+    } else {
+      holdingsByCph.set(cph, {
+        ...rest,
+        countyParishHoldingId: holdingId,
+        countyParishHoldingNumber: cph,
+        holdingName,
+        roles: role ? [role] : [],
+        roleName: role
+      })
+    }
+  }
+
+  return [...holdingsByCph.values()].map(({ roles, roleName, ...holding }) => ({
+    ...holding,
+    roleName: roles.length > 0 ? roles.join(', ') : roleName
+  }))
 }
 
 /**

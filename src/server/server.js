@@ -24,7 +24,6 @@ import { home } from '#server/routes/home/index.js'
 import { contentSecurityPolicy } from '#server/plugins/content-security-policy.js'
 import { serveStaticFiles } from '#server/plugins/serve-static-files.js'
 import { accessDenied } from '#server/routes/auth/access-denied/index.js'
-import { profile } from '#server/routes/profile/index.js'
 
 const serviceName = 'lis-hubs-front-office'
 
@@ -109,7 +108,6 @@ export async function createServer() {
     accessDenied.plugin,
     health.plugin,
     home.plugin,
-    profile.plugin,
     proxy.plugin
   ])
 
