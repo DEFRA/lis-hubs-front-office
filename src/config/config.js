@@ -244,28 +244,6 @@ export const config = convict({
       env: 'CATTLE_HOME_API_TIMEOUT'
     }
   },
-  krds: {
-    url: {
-      doc: 'keeper-data-api (krds) endpoint used to enrich hub auth sessions',
-      format: String,
-      nullable: true,
-      default: null,
-      env: 'KRDS_URL'
-    },
-    clientId: {
-      doc: 'Basic auth client ID krds requires',
-      format: String,
-      default: '',
-      env: 'KRDS_CLIENT_ID'
-    },
-    clientSecret: {
-      doc: 'Basic auth secret paired with krds.clientId',
-      format: String,
-      default: '',
-      env: 'KRDS_CLIENT_SECRET',
-      sensitive: true
-    }
-  },
   auth: {
     hubOrigin: {
       doc: 'Public origin for the front-office hub',

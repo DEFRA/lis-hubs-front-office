@@ -65,3 +65,49 @@ describe('CattleHomeBe4FeClient.getUserDetails()', () => {
     expect(error).toEqual(new Error('be4fe down'))
   })
 })
+
+describe('CattleHomeBe4FeClient.createUser()', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  test('posts the claims and returns the payload data', async () => {
+    // Arrange
+    const claims = {
+      sub: 'user-1',
+      email: 'keeper@example.com',
+      given_name: 'Test',
+      family_name: 'User'
+    }
+    const data = { subject: 'user-1', cphs: [{ cph: '12/345/0001' }] }
+    const post = vi
+      .spyOn(client, '_post')
+      .mockResolvedValueOnce({ res: { statusCode: 200 }, payload: { data } })
+
+    // Act
+    const result = await client.createUser(claims)
+
+    // Assert
+    expect(post).toHaveBeenCalledWith('api/users', { payload: claims })
+    expect(result).toEqual(data)
+  })
+
+  test('propagates request errors', async () => {
+    // Arrange
+    const claims = { sub: 'user-1', email: 'keeper@example.com' }
+    const conflictError = new Error('409 - Email is bound to another account')
+    conflictError.statusCode = 409
+    vi.spyOn(client, '_post').mockRejectedValueOnce(conflictError)
+
+    // Act
+    let error
+    try {
+      await client.createUser(claims)
+    } catch (e) {
+      error = e
+    }
+
+    // Assert
+    expect(error).toBe(conflictError)
+  })
+})
