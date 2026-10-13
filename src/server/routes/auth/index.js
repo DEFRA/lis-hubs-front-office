@@ -68,6 +68,7 @@ function getHubJwtConfig() {
 }
 
 export const auth = createHubAuth({
+  hubId: 'front-office',
   getHubJwtCookieName,
   getCookieOptions,
   getHubJwtConfig,
