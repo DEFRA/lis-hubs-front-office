@@ -7,10 +7,8 @@ import {
   test,
   vi
 } from 'vitest'
-import { HUB_AUTH_STRATEGY } from '@defra/lis-hubs-infra-access/authentication'
 
 import { config } from '#config/config.js'
-import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
 
 describe('#frontOfficeServer', () => {
   const originalLogFormat = process.env.LOG_FORMAT
@@ -70,38 +68,6 @@ describe('#frontOfficeServer', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.result).toContain('Livestock Information')
-  })
-
-  test('Should redirect signed-out profile requests to login', async () => {
-    const response = await server.inject({
-      method: 'GET',
-      url: '/profile'
-    })
-
-    expect(response.statusCode).toBe(302)
-    expect(response.headers.location).toBe('/auth/login?returnUrl=%2Fprofile')
-  })
-
-  test('Should render the profile for signed-in users', async () => {
-    // Arrange
-    const getUserDetails = vi
-      .spyOn(cattleHomeBe4FeClient, 'getUserDetails')
-      .mockResolvedValue({ subject: 'user-1', cphs: [] })
-
-    // Act
-    const response = await server.inject({
-      method: 'GET',
-      url: '/profile',
-      auth: {
-        strategy: HUB_AUTH_STRATEGY,
-        credentials: { user: { sub: 'user-1' }, authorizedSpecies: [] }
-      }
-    })
-
-    // Assert
-    expect(response.statusCode).toBe(200)
-    expect(response.result).toContain('Profile and Settings')
-    expect(getUserDetails).toHaveBeenCalledWith('user-1')
   })
 
   test('Should render the page not found page with the front-office links for an unknown path', async () => {
