@@ -120,6 +120,14 @@ export const config = convict({
     default: null,
     env: 'HTTP_PROXY'
   },
+  maintenance: {
+    availableFrom: {
+      doc: 'When the service is available again, as a UK local date-time without an offset, e.g. 2026-11-19T09:00. Empty means the service is not in maintenance',
+      format: String,
+      default: '',
+      env: 'MAINTENANCE_AVAILABLE_FROM'
+    }
+  },
   session: {
     cache: {
       engine: {

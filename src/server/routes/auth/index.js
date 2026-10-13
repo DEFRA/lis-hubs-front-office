@@ -77,5 +77,5 @@ export const auth = createHubAuth({
   completeAuthorizationCodeGrant,
   buildLogoutUrl,
   loginRoutes: [{ path: '/auth/login' }],
-  accessDeniedPath: ACCESS_DENIED_PATH
+  notAuthorisedPath: ACCESS_DENIED_PATH
 })

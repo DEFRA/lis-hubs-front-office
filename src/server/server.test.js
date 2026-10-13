@@ -9,6 +9,7 @@ import {
 } from 'vitest'
 import { HUB_AUTH_STRATEGY } from '@defra/lis-hubs-infra-access/authentication'
 
+import { config } from '#config/config.js'
 import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
 
 describe('#frontOfficeServer', () => {
@@ -18,6 +19,7 @@ describe('#frontOfficeServer', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    config.set('maintenance.availableFrom', '')
   })
 
   beforeAll(async () => {
@@ -100,6 +102,80 @@ describe('#frontOfficeServer', () => {
     expect(response.statusCode).toBe(200)
     expect(response.result).toContain('Profile and Settings')
     expect(getUserDetails).toHaveBeenCalledWith('user-1')
+  })
+
+  test('Should render the page not found page with the front-office links for an unknown path', async () => {
+    // Act
+    const response = await server.inject({
+      method: 'GET',
+      url: '/no-such-page'
+    })
+
+    // Assert
+    expect(response.statusCode).toBe(404)
+    expect(response.result).toContain('Page not found')
+    expect(response.result).toContain(
+      '<a class="govuk-link" href="/">Home page</a>'
+    )
+    expect(response.result).toContain(
+      '<a class="govuk-link" href="/">Get started</a>'
+    )
+  })
+
+  test('Should answer with the service unavailable page while maintenance is set', async () => {
+    // Arrange
+    config.set('maintenance.availableFrom', '2026-11-19T09:00')
+    const maintenanceServer = await createServer()
+    await maintenanceServer.initialize()
+
+    // Act
+    const response = await maintenanceServer.inject({
+      method: 'GET',
+      url: '/'
+    })
+    await maintenanceServer.stop({ timeout: 0 })
+
+    // Assert
+    expect(response.statusCode).toBe(503)
+    expect(response.result).toContain('Sorry, the service is unavailable')
+    expect(response.headers['retry-after']).toBeDefined()
+  })
+
+  test('Should keep the health check up while maintenance is set', async () => {
+    // Arrange
+    config.set('maintenance.availableFrom', '2026-11-19T09:00')
+    const maintenanceServer = await createServer()
+    await maintenanceServer.initialize()
+
+    // Act
+    const response = await maintenanceServer.inject({
+      method: 'GET',
+      url: '/health'
+    })
+    await maintenanceServer.stop({ timeout: 0 })
+
+    // Assert
+    expect(response.statusCode).toBe(200)
+  })
+
+  test('Should serve the service as normal when maintenance is not set', async () => {
+    // Arrange
+    config.set('maintenance.availableFrom', '')
+    const normalServer = await createServer()
+    await normalServer.initialize()
+
+    // Act
+    const response = await normalServer.inject({
+      method: 'GET',
+      url: '/'
+    })
+    await normalServer.stop({ timeout: 0 })
+
+    // Assert
+    expect(response.statusCode).toBe(200)
+    expect(response.result).toContain('Livestock Information')
+    expect(response.result).not.toContain('Sorry, the service is unavailable')
+    expect(response.headers['retry-after']).toBeUndefined()
   })
 
   test('Should render the holdings table', async () => {
