@@ -70,7 +70,7 @@ describe('#frontOfficeServer', () => {
     expect(response.result).toContain('Livestock Information')
   })
 
-  test('Should render the page not found page with the front-office links for an unknown path', async () => {
+  test('Should render the page not found page for an unknown path', async () => {
     // Act
     const response = await server.inject({
       method: 'GET',
@@ -81,10 +81,7 @@ describe('#frontOfficeServer', () => {
     expect(response.statusCode).toBe(404)
     expect(response.result).toContain('Page not found')
     expect(response.result).toContain(
-      '<a class="govuk-link" href="/">Home page</a>'
-    )
-    expect(response.result).toContain(
-      '<a class="govuk-link" href="/">Get started</a>'
+      'If you typed the web address, check it is correct.'
     )
   })
 
@@ -163,7 +160,7 @@ describe('#frontOfficeServer', () => {
 
     expect(result).toContain('<h1 class="govuk-heading-xl">My holdings</h1>')
     expect(result).toContain(
-      '<div class="lis-sortable-table__wrapper" tabindex="0" role="region" aria-label="My holdings table">'
+      '<div class="lis-sortable-table__wrapper" data-module="lis-scrollable-table" tabindex="0" role="region" aria-label="My holdings table">'
     )
     expect(result).toContain(
       '<a class="govuk-link" href="/cattle/holdings/12/345/0001">12/345/0001</a>'
@@ -173,6 +170,40 @@ describe('#frontOfficeServer', () => {
     expect(result).toContain(
       '<td class="govuk-table__cell"><strong class="govuk-tag govuk-tag--red">Not supplied</strong></td>'
     )
+  })
+
+  test('Should render the CPH as a row header in the holdings table', async () => {
+    // Arrange
+    const context = {
+      pageTitle: 'My holdings',
+      holdings: [
+        {
+          countyParishHoldingNumber: '12/345/0001',
+          holdingName: 'Oakfield Farm',
+          roleName: 'Owner'
+        }
+      ]
+    }
+
+    // Act
+    const result = await server.render('home/holdings', context)
+
+    // Assert
+    expect(result).toContain('<th scope="row"')
+  })
+
+  test('Should render the related content landmark on the welcome page', async () => {
+    // Act
+    const response = await server.inject({
+      method: 'GET',
+      url: '/'
+    })
+
+    // Assert
+    expect(response.result).toContain(
+      '<aside aria-labelledby="related-content-title">'
+    )
+    expect(response.result).toMatch(/<h2 [^>]*id="related-content-title"/)
   })
 
   test('Should capitalise the KRDS role in the holdings table', async () => {
