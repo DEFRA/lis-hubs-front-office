@@ -13,7 +13,7 @@ export const accessDenied = {
         handler(_request, h) {
           return h
             .view('auth/access-denied/index', {
-              pageTitle: 'You cannot use this service yet'
+              pageTitle: 'You do not have permission to use this service yet'
             })
             .code(statusCodes.forbidden)
         }

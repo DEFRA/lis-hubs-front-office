@@ -15,6 +15,8 @@ describe('#accessDenied', () => {
     await server.stop({ timeout: 0 })
 
     expect(response.statusCode).toBe(403)
-    expect(response.result).toContain('You cannot use this service yet')
+    expect(response.result).toContain(
+      'You do not have permission to use this service yet'
+    )
   })
 })
