@@ -102,8 +102,6 @@ export async function createServer() {
       healthPath: '/health',
       assetPath: config.get('assetPath')
     }),
-    contentSecurityPolicy,
-    securityHeaders,
     serveStaticFiles,
     auth.plugin,
     accessDenied.plugin,
@@ -113,6 +111,10 @@ export async function createServer() {
   ])
 
   server.ext('onPreResponse', catchAll)
+
+  // Register the CSP and security-header plugins after the catchAll error
+  // handler so their onPreResponse runs last and hardens error responses too.
+  await server.register([contentSecurityPolicy, securityHeaders])
 
   return server
 }
