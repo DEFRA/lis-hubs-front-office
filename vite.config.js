@@ -65,7 +65,11 @@ export default defineConfig(({ mode }) => {
       }
     },
     test: {
-      include: ['src/**/*.test.js']
+      include: ['src/**/*.test.js'],
+      env: {
+        HUB_JWT_SECRET: 'test-hub-jwt-secret',
+        SESSION_COOKIE_PASSWORD: 'test-session-cookie-password-0123456789'
+      }
     }
   }
 })
