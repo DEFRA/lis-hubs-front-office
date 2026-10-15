@@ -165,7 +165,7 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(payload.authzVersion).toBe(1)
   })
 
-  test('Should refuse a user who is not on the allow-list without a session or user account', async () => {
+  test('Should refuse a user who is not on the allow-list to the access-denied page without a user account or JWT', async () => {
     const configValues = {
       ...createConfigValueMap(),
       'auth.allowList.enabled': true,
@@ -173,8 +173,6 @@ describe('#frontOfficeAuthRoutes', () => {
     }
     configGet.mockImplementation((path) => configValues[path])
     const user = { sub: 'test-user', email: 'someone.else@example.com' }
-
-    buildLogoutUrl.mockResolvedValue('https://defra-ci.example.test/logout')
 
     completeAuthorizationCodeGrant.mockResolvedValue({
       user,
@@ -192,13 +190,8 @@ describe('#frontOfficeAuthRoutes', () => {
     await server.stop({ timeout: 0 })
 
     expect(response.statusCode).toBe(302)
-    expect(response.headers.location).toBe(
-      'https://defra-ci.example.test/logout'
-    )
-    expect(buildLogoutUrl.mock.calls[0][1]).toEqual({
-      authSession: { ...user, idToken: 'id-token' },
-      returnPath: '/auth/access-denied'
-    })
+    expect(response.headers.location).toBe('/auth/access-denied')
+    expect(buildLogoutUrl).not.toHaveBeenCalled()
     expect(createUser).not.toHaveBeenCalled()
     expect(
       extractCookieValue(response.headers['set-cookie'], 'livestock_hub_jwt')

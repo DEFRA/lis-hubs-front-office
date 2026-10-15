@@ -9,11 +9,15 @@ export const accessDenied = {
       server.route({
         method: 'GET',
         path: ACCESS_DENIED_PATH,
-        options: { auth: false },
-        handler(_request, h) {
+        // A refused user stays signed in so they can sign out from here.
+        options: { auth: { mode: 'try' } },
+        handler(request, h) {
           return h
             .view('auth/access-denied/index', {
-              pageTitle: 'You do not have permission to use this service yet'
+              pageTitle: 'You do not have permission to use this service yet',
+              ...(request.auth.isAuthenticated
+                ? { signOutHref: '/signout' }
+                : {})
             })
             .code(statusCodes.forbidden)
         }
