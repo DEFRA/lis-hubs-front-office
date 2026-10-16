@@ -85,6 +85,24 @@ describe('#frontOfficeServer', () => {
     )
   })
 
+  test('Should keep the hardening headers on the swapped error response', async () => {
+    // Act
+    const response = await server.inject({
+      method: 'GET',
+      url: '/no-such-page'
+    })
+
+    // Assert
+    expect(response.statusCode).toBe(404)
+    expect(response.headers['content-security-policy']).toContain(
+      "default-src 'self'"
+    )
+    expect(response.headers['x-content-type-options']).toBe('nosniff')
+    expect(response.headers['strict-transport-security']).toBeDefined()
+    expect(response.headers['referrer-policy']).toBeDefined()
+    expect(response.headers['permissions-policy']).toBeDefined()
+  })
+
   test('Should answer with the service unavailable page while maintenance is set', async () => {
     // Arrange
     config.set('maintenance.availableFrom', '2026-11-19T09:00')
