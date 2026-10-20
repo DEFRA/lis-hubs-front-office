@@ -41,10 +41,10 @@
   "author": "Defra DDTS",
   "license": "OGL-UK-3.0",
   "dependencies": {
-    "@defra/lis-hubs-infra-access": "^0.34.0",
-    "@defra/lis-hubs-infra-core": "^0.15.0",
-    "@defra/lis-hubs-infra-registry": "^0.5.0",
-    "@defra/lis-infra-ui-services": "^0.30.0",
+    "@defra/lis-hubs-infra-access": "^0.35.0",
+    "@defra/lis-hubs-infra-core": "^0.17.0",
+    "@defra/lis-hubs-infra-registry": "^0.6.0",
+    "@defra/lis-infra-ui-services": "^0.33.0",
     "@hapi/hapi": "21.4.10",
     "@hapi/inert": "7.1.2",
     "@hapi/scooter": "8.0.0",
@@ -52,8 +52,6 @@
     "blankie": "5.0.0",
     "convict": "6.2.5",
     "convict-format-with-validator": "6.2.0",
-    "eslint-plugin-jsdoc": "^63.0.8",
-    "eslint-plugin-sonarjs": "^4.1.0",
     "govuk-frontend": "6.5.0"
   },
   "peerDependencies": {
@@ -67,6 +65,8 @@
     "audit-ci": "^7.1.0",
     "cheerio": "1.2.0",
     "eslint": "^9.0.0",
+    "eslint-plugin-jsdoc": "^63.0.8",
+    "eslint-plugin-sonarjs": "^4.1.0",
     "husky": "9.1.7",
     "nodemon": "3.1.14",
     "npm-run-all": "4.1.5",
