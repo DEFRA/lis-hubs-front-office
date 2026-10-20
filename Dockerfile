@@ -5,7 +5,6 @@ FROM defradigital/node-development:${PARENT_VERSION} AS build
 ARG PARENT_VERSION
 LABEL uk.gov.defra.ffc.parent-image=defradigital/node-development:${PARENT_VERSION}
 
-# A local .npmrc can provide registry configuration without being required in CI.
 COPY --chown=node:node --chmod=755 package*.json ./
 RUN npm ci
 COPY --chown=node:node --chmod=755 . .
