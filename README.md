@@ -1,85 +1,247 @@
-# Front Office
+# lis-hubs-front-office
 
-Role: deployable hub application for livestock keepers, owners, agents, and delegates.
+Part of the Livestock Information Service (LIS), which lets livestock keepers, owners, agents and
+delegates record and manage their animals.
 
-Purpose: to manage the lifecycle of an animal.
+The front-office hub is the public entry point for keepers and their agents. It signs users in,
+holds their session, shows the signed-in home page with their holdings, and routes requests on to
+the species microsites (spokes) that do the actual work.
 
-Authentication:
+Deployed on the Core Delivery Platform (CDP). See the
+[CDP portal service page](https://portal.cdp-int.defra.cloud/services/lis-hubs-front-office) for
+environments, deployments, logs and metrics.
 
-- Defra CI only
+## Architecture
 
-Expected dependencies:
+LIS uses a hub and spoke design. A hub owns sign-in and sessions; each spoke is a separate app for
+one species and task, mounted under a path on the hub:
 
-- `@defra/lis-hubs-infra-access`
-- `@defra/lis-hubs-infra-core`
-- `@defra/lis-hubs-infra-registry`
-- `@defra/lis-infra-ui-services`
+```text
+browser → front-office hub ─┬─ /cattle           → lis-apps-cattle-home     → lis-be4fe-cattle-home → lis-api-cattle
+                            ├─ /cattle/register  → lis-apps-cattle-register
+                            ├─ /cattle/move      → lis-apps-cattle-move
+                            └─ /cattle/death     → lis-apps-cattle-death
+```
 
-This project is the active external hub boundary for the solution.
+- **Authentication:** users sign in with Defra Customer Identity (OIDC). The hub keeps a
+  server-side session (Redis on CDP) and issues a hub JWT in a cookie, which the spokes
+  verify.
+- **Spokes:** the hub proxies each path to its spoke, forwarding only the hub JWT cookie. The list
+  of spokes and their paths comes from
+  [lis-hubs-infra-registry](https://github.com/DEFRA/lis-hubs-infra-registry).
+- **Downstream calls:** the home page reads the user's holdings from `lis-be4fe-cattle-home`, with an
+  AWS STS service token and an API key.
+- **Shared packages:**
+  [lis-hubs-infra-access](https://github.com/DEFRA/lis-hubs-infra-access) (auth, sessions, access decisions),
+  [lis-hubs-infra-core](https://github.com/DEFRA/lis-hubs-infra-core) (logging, request context, service clients, proxy),
+  [lis-hubs-infra-registry](https://github.com/DEFRA/lis-hubs-infra-registry) (module list),
+  [lis-infra-ui-services](https://github.com/DEFRA/lis-infra-ui-services) (layout, error pages, maintenance page).
 
-Current state:
+See [HUB-ARCHITECTURE.md](https://github.com/DEFRA/lis-dev/blob/main/HUB-ARCHITECTURE.md) for the
+hub and spoke design.
 
-- minimal deployable shell exists
-- `/` now renders the richer front-office welcome page and signed-in livestock summary dashboard
-- `/profile` renders a front-office profile and settings page for authenticated users
-- `/health` responds with a simple health payload
-- static asset and favicon routes are now wired through the front-office server shell
-- content security policy is now owned by the front-office server shell
-- shared module metadata comes from `@defra/lis-hubs-infra-registry`
-- authentication, sessions and access decisions come from `@defra/lis-hubs-infra-access`
+### Sign-in and direct microsite access
 
-## Container publishing
+The hub is the only place users sign in. A request for a spoke URL such as `/cattle/register`
+without a valid hub JWT redirects to `/auth/login` with the original path as a relative
+`returnUrl`. After sign-in completes at `/sso`, the hub sends the browser back to that path.
 
-Pull requests, short-lived branches, and merged changes on `main` run the shared
-validation workflow. After tests pass, it builds the `production` target from
-the root `Dockerfile`, verifies the container's `/health` endpoint, and uploads
-the tested image as a commit-addressed GitHub Actions artifact.
+The OIDC redirect URI is `HUB_ORIGIN` followed by `OIDC_REDIRECT_PATH`. The hub always serves the
+callback at `/sso`, so keep `OIDC_REDIRECT_PATH` as `/sso`: changing it alone breaks sign-in. If
+`HUB_ORIGIN` changes, update the Defra Customer Identity app registration to match exactly.
 
-Stable and prerelease Git tags trigger `.github/workflows/publish.yml`. This
-workflow validates the tag and its source branch, downloads the image artifact
-for the tagged commit, verifies its image ID and `git.hash` label, and publishes
-that exact image to Amazon ECR with two immutable tags:
+The hub's `HUB_JWT_ISSUER` must be in each spoke's `HUB_ORIGINS`. `HUB_JWT_AUDIENCE`,
+`HUB_JWT_COOKIE_NAME` and `HUB_JWT_SECRET` must match the spoke's values.
 
-- the semantic version, for example `1.2.3`
-- the source revision, for example `sha-0123456789abcdef...`
+### Routes
 
-The repository or organisation must provide these GitHub Actions variables:
+| Path                  | Purpose                                                                    |
+| --------------------- | -------------------------------------------------------------------------- |
+| `/`                   | Welcome page, or the user's holdings once signed in                        |
+| `/auth/login`         | Starts sign-in                                                             |
+| `/sso`                | OIDC callback                                                              |
+| `/auth/logout`        | Signs the user out                                                         |
+| `/signout`            | Redirects to `/auth/logout` (the header link)                              |
+| `/auth/access-denied` | Tells a refused user they do not have permission yet, with a sign out link |
+| `/health`             | Health check                                                               |
+| `/cattle/...`         | Proxied to the cattle spokes (see above)                                   |
 
-- `AWS_REGION`
-- `AWS_ACCOUNT_ID`
-- `ECR_REPOSITORY`
+## Prerequisites
 
-`ECR_REPOSITORY` is optional and defaults to the GitHub repository name. AWS
-must contain a `github-<image-name>-build-role` IAM role that trusts this
-repository through GitHub OIDC and can upload images to the configured ECR
-repository. No long-lived AWS access keys are required.
+- Node.js 24 (see `.nvmrc`, use `nvm use`)
+- Docker with Docker Compose
+- A local clone of [lis-dev](https://github.com/DEFRA/lis-dev) (recommended, see [Running with lis-dev](#running-with-lis-dev-recommended))
 
-## OIDC callback
+## Setup
 
-Defra CI must redirect to `/sso`. The complete redirect URI is the public
-`HUB_ORIGIN` followed by `/sso`. The path defaults to `/sso` and can be changed
-with `OIDC_REDIRECT_PATH`; the Defra CI application registration must be updated
-to exactly the same URI whenever it changes.
+### Development
 
-## Direct microsite access
+```bash
+nvm use
+npm install
+cp .env.example .env
+```
 
-Front office is the canonical authentication entry point for public microsite
-URLs such as `/cattle/register`. A microsite request without a valid hub JWT
-redirects to `/auth/login` on `HUB_ORIGIN` with its mounted path as a relative
-`returnUrl`. After `/sso` completes, the hub redirects the browser back to the
-original microsite path. Microsites must use the same `HUB_JWT_ISSUER`, audience,
-cookie name and signing secret as front office.
+`.env` is loaded when running standalone, and also by a sideloaded `npm run dev` for variables that
+compose does not set. `HUB_JWT_SECRET` and `SESSION_COOKIE_PASSWORD` have no
+default. `.env.example` sets local values for both, which you can keep for local use (the password must
+be at least 32 characters).
 
-Remaining work:
+### Test
 
-- tighten front-office-specific module membership and capability policies
-- add the remaining deployment packaging and environment conventions needed for standalone hosting
+There are no tools to install beyond `npm install`. Tests use [Vitest](https://vitest.dev/).
 
-## Required environment variables
+## Running with lis-dev (recommended)
 
-The following have no default and the service will not start without them:
+The hub only works properly alongside the spokes, their backend services and a fake identity
+provider. [lis-dev](https://github.com/DEFRA/lis-dev) runs all of these locally with Docker
+Compose and serves them behind local HTTPS hostnames, so it is the recommended way to run and work
+on this repo. Follow its README for the one-time setup.
 
-- `HUB_JWT_SECRET` — signs the hub-issued JWT
-- `SESSION_COOKIE_PASSWORD` — encrypts the session cookie (minimum 32 characters)
+Start the stack:
 
-Set both as secrets in every deployed environment via the CDP Portal.
+```bash
+cd lis-dev
+docker compose up -d
+```
+
+To work on this repo, swap its container for a local server with hot reload while the rest of the
+stack stays in Docker:
+
+```bash
+.bin/sideload up front-office
+.bin/sideload restore    # when done: back to the container
+```
+
+Then open <https://front-office.lis.defra> and sign in through the fake identity provider.
+
+## Running standalone
+
+You can also run the server on its own with `npm run dev`, using the values in `.env`. Without the
+rest of the stack, sign-in needs an OIDC provider at `OIDC_DISCOVERY_URL`, the signed-in home page
+can't load holdings, and the spoke paths have nothing to proxy to.
+
+| Script              | Purpose                                                   |
+| ------------------- | --------------------------------------------------------- |
+| `npm run dev`       | Build frontend assets, then start the server with nodemon |
+| `npm run dev:debug` | As `dev`, but waits for a debugger to attach              |
+| `npm start`         | Production build and start                                |
+
+### Configuration
+
+Configuration is in `src/config/config.js`. Values marked secret must be set as secrets in the
+CDP portal for every deployed environment.
+
+| Variable                     | Description                                                                                                     | Default                                 |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `ENVIRONMENT`                | Environment name (`local`, `docker_compose`, `dev`, `test`, `prod`, ...)                                        | `local`                                 |
+| `HOST`                       | Address to bind                                                                                                 | `0.0.0.0`                               |
+| `PORT`                       | Port to bind                                                                                                    | `8085`                                  |
+| `SERVICE_VERSION`            | Deployed version, for logs                                                                                      | none                                    |
+| `ASSET_PATH`                 | Base path for static assets                                                                                     | `/public`                               |
+| `STATIC_CACHE_TIMEOUT`       | Static asset cache timeout (ms)                                                                                 | `86400000`                              |
+| `HTTP_PROXY`                 | Outbound HTTP proxy                                                                                             | none                                    |
+| `LOG_ENABLED`                | Whether logging is on                                                                                           | `true`                                  |
+| `LOG_LEVEL`                  | Log level                                                                                                       | `info`                                  |
+| `LOG_FORMAT`                 | `ecs` or `pretty`                                                                                               | `ecs` in production, otherwise `pretty` |
+| `LOG_HASH_SECRET`            | Secret. Key for hashing sensitive values in logs                                                                | none                                    |
+| `MAINTENANCE_AVAILABLE_FROM` | UK local date-time (e.g. `2026-11-19T09:00`) to show the maintenance page until; empty means not in maintenance | empty                                   |
+| `HUB_ORIGIN`                 | Public origin of the hub                                                                                        | `http://localhost:3101`                 |
+| `SESSION_CACHE_ENGINE`       | `memory` or `redis`                                                                                             | `memory`                                |
+| `SESSION_CACHE_NAME`         | Session cache name                                                                                              | `front-office-session`                  |
+| `SESSION_CACHE_TTL`          | Server-side session TTL (ms)                                                                                    | `14400000`                              |
+| `SESSION_COOKIE_TTL`         | Session cookie TTL (ms)                                                                                         | `14400000`                              |
+| `SESSION_COOKIE_PASSWORD`    | Secret, required. Encrypts the session cookie (at least 32 characters)                                          | none                                    |
+| `REDIS_HOST`                 | Redis host                                                                                                      | `127.0.0.1`                             |
+| `REDIS_PORT`                 | Redis port                                                                                                      | `6379`                                  |
+| `REDIS_USERNAME`             | Redis username                                                                                                  | empty                                   |
+| `REDIS_PASSWORD`             | Secret. Redis password                                                                                          | empty                                   |
+| `REDIS_KEY_PREFIX`           | Redis key prefix                                                                                                | `front-office:`                         |
+| `REDIS_TLS`                  | Connect to Redis over TLS                                                                                       | `false`                                 |
+| `USE_SINGLE_INSTANCE_CACHE`  | Single Redis instance rather than a cluster                                                                     | `true`                                  |
+| `HUB_JWT_SECRET`             | Secret, required. Signs and verifies hub JWTs                                                                   | none                                    |
+| `HUB_JWT_ISSUER`             | Hub JWT issuer                                                                                                  | `http://localhost:3101`                 |
+| `HUB_JWT_AUDIENCE`           | Hub JWT audience                                                                                                | `livestock-spokes`                      |
+| `HUB_JWT_COOKIE_NAME`        | Cookie that carries the hub JWT                                                                                 | `livestock_hub_jwt`                     |
+| `HUB_JWT_TTL_SECONDS`        | Hub JWT TTL (seconds)                                                                                           | `14400`                                 |
+| `OIDC_DISCOVERY_URL`         | Defra Customer Identity OIDC discovery URL                                                                      | none                                    |
+| `OIDC_CLIENT_ID`             | OIDC client ID                                                                                                  | `front-office-client`                   |
+| `OIDC_CLIENT_SECRET`         | Secret. OIDC client secret                                                                                      | local placeholder                       |
+| `OIDC_REDIRECT_PATH`         | OIDC callback path                                                                                              | `/sso`                                  |
+| `OIDC_SERVICE_ID`            | Optional service ID passed to the identity provider                                                             | none                                    |
+| `AUTH_ALLOW_LIST_ENABLED`    | Only let users on the allow-list sign in                                                                        | `false`                                 |
+| `AUTH_ALLOW_LIST_EMAILS`     | Secret. Comma-separated email addresses on the allow-list                                                       | empty                                   |
+| `CATTLE_HOME_API_KEY`        | Secret. API key for `lis-be4fe-cattle-home`                                                                     | empty                                   |
+| `CATTLE_HOME_API_TIMEOUT`    | Timeout for `lis-be4fe-cattle-home` requests (ms)                                                               | `5000`                                  |
+| `MAPBOX_API_KEY`             | Secret. Mapbox API key                                                                                          | local placeholder                       |
+
+On CDP, the platform also sets `AWS_REGION` for service tokens. In lis-dev, the compose files set
+`AWS_ENDPOINT_URL_STS` to point at the fake STS.
+
+## Running tests
+
+```bash
+npm test                 # unit tests
+npm run test:coverage    # with coverage; fails below 90%
+npm run lint             # ESLint and Stylelint
+npm run format:check     # Prettier
+```
+
+End-to-end journeys are covered by [lis-journey-tests](https://github.com/DEFRA/lis-journey-tests).
+
+## Monitoring
+
+- Health check: `GET /health`
+- Logs: OpenSearch dashboard per environment, linked from the [CDP portal service page](https://portal.cdp-int.defra.cloud/services/lis-hubs-front-office) under Logs
+- Metrics: Grafana dashboard per environment, linked from the [CDP portal service page](https://portal.cdp-int.defra.cloud/services/lis-hubs-front-office) under Metrics
+
+## Pipelines
+
+Build, versioning and publishing run in GitHub Actions (`.github/workflows`) using Cake scripts
+(`*.cake`):
+
+- **Pull request to `main`**: validate (format, lint, test), Sonar analysis, version check
+- **Push to a `feature/` or `hotfix/` branch**: prerelease version and tag
+- **Merge to `main`**: release tag, then publish the container image
+
+Versions come from git tags (SemVer). Validation builds the `production` target of the
+`Dockerfile`, checks the container's `/health` endpoint and keeps the tested image as a workflow
+artifact. When a tag is pushed, `publish.yml` publishes that exact image to Amazon ECR, tagged with
+the version and the commit (`sha-...`), using GitHub OIDC rather than long-lived AWS keys.
+
+The workflows need these GitHub Actions variables: `AWS_REGION`, `AWS_ACCOUNT_ID` and, optionally,
+`ECR_REPOSITORY` (defaults to the repository name). AWS must have a
+`github-<image-name>-build-role` IAM role that trusts this repository and can push to that ECR
+repository.
+
+## Branching policy
+
+The repo uses mainline development. Branch from `main` and name the branch:
+
+- `feature/LREG-<ticket>-<short-kebab-description>`
+- `hotfix/LREG-<ticket>-<short-kebab-description>`
+
+`LREG` must be uppercase, because the GitHub ruleset rejects other branch names. Rebase onto `main`
+rather than merging `main` in. Incomplete work goes behind a feature flag.
+
+## Contributing to this project
+
+- Follow the [Defra software development standards](https://github.com/DEFRA/software-development-standards).
+- A pre-commit hook runs the security audit, format check, lint and tests. Run `npm run setup:husky` once to install it.
+- Open a pull request against `main` using the PR template. CI must pass and the Sonar quality gate must be green before merge.
+
+## Licence
+
+THIS INFORMATION IS LICENSED UNDER THE CONDITIONS OF THE OPEN GOVERNMENT LICENCE found at:
+
+<http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3>
+
+The following attribution statement MUST be cited in your products and applications when using this information.
+
+> Contains public sector information licensed under the Open Government licence v3
+
+### About the licence
+
+The Open Government Licence (OGL) was developed by the Controller of His Majesty's Stationery Office (HMSO) to enable information providers in the public sector to license the use and re-use of their information under a common open licence.
+
+It is designed to encourage use and re-use of information freely and flexibly, with only a few conditions.
