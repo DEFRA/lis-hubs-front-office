@@ -132,48 +132,53 @@ can't load holdings, and the spoke paths have nothing to proxy to.
 Configuration is in `src/config/config.js`. Values marked secret must be set as secrets in the
 CDP portal for every deployed environment.
 
-| Variable                     | Description                                                                                                     | Default                                 |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| `ENVIRONMENT`                | Environment name (`local`, `docker_compose`, `dev`, `test`, `prod`, ...)                                        | `local`                                 |
-| `HOST`                       | Address to bind                                                                                                 | `0.0.0.0`                               |
-| `PORT`                       | Port to bind                                                                                                    | `8085`                                  |
-| `SERVICE_VERSION`            | Deployed version, for logs                                                                                      | none                                    |
-| `ASSET_PATH`                 | Base path for static assets                                                                                     | `/public`                               |
-| `STATIC_CACHE_TIMEOUT`       | Static asset cache timeout (ms)                                                                                 | `86400000`                              |
-| `HTTP_PROXY`                 | Outbound HTTP proxy                                                                                             | none                                    |
-| `LOG_ENABLED`                | Whether logging is on                                                                                           | `true`                                  |
-| `LOG_LEVEL`                  | Log level                                                                                                       | `info`                                  |
-| `LOG_FORMAT`                 | `ecs` or `pretty`                                                                                               | `ecs` in production, otherwise `pretty` |
-| `LOG_HASH_SECRET`            | Secret. Key for hashing sensitive values in logs                                                                | none                                    |
-| `MAINTENANCE_AVAILABLE_FROM` | UK local date-time (e.g. `2026-11-19T09:00`) to show the maintenance page until; empty means not in maintenance | empty                                   |
-| `HUB_ORIGIN`                 | Public origin of the hub                                                                                        | `http://localhost:3101`                 |
-| `SESSION_CACHE_ENGINE`       | `memory` or `redis`                                                                                             | `memory`                                |
-| `SESSION_CACHE_NAME`         | Session cache name                                                                                              | `front-office-session`                  |
-| `SESSION_CACHE_TTL`          | Server-side session TTL (ms)                                                                                    | `14400000`                              |
-| `SESSION_COOKIE_TTL`         | Session cookie TTL (ms)                                                                                         | `14400000`                              |
-| `SESSION_COOKIE_PASSWORD`    | Secret, required. Encrypts the session cookie (at least 32 characters)                                          | none                                    |
-| `REDIS_HOST`                 | Redis host                                                                                                      | `127.0.0.1`                             |
-| `REDIS_PORT`                 | Redis port                                                                                                      | `6379`                                  |
-| `REDIS_USERNAME`             | Redis username                                                                                                  | empty                                   |
-| `REDIS_PASSWORD`             | Secret. Redis password                                                                                          | empty                                   |
-| `REDIS_KEY_PREFIX`           | Redis key prefix                                                                                                | `front-office:`                         |
-| `REDIS_TLS`                  | Connect to Redis over TLS                                                                                       | `false`                                 |
-| `USE_SINGLE_INSTANCE_CACHE`  | Single Redis instance rather than a cluster                                                                     | `true`                                  |
-| `HUB_JWT_SECRET`             | Secret, required. Signs and verifies hub JWTs                                                                   | none                                    |
-| `HUB_JWT_ISSUER`             | Hub JWT issuer                                                                                                  | `http://localhost:3101`                 |
-| `HUB_JWT_AUDIENCE`           | Hub JWT audience                                                                                                | `livestock-spokes`                      |
-| `HUB_JWT_COOKIE_NAME`        | Cookie that carries the hub JWT                                                                                 | `livestock_hub_jwt`                     |
-| `HUB_JWT_TTL_SECONDS`        | Hub JWT TTL (seconds)                                                                                           | `14400`                                 |
-| `OIDC_DISCOVERY_URL`         | Defra Customer Identity OIDC discovery URL                                                                      | none                                    |
-| `OIDC_CLIENT_ID`             | OIDC client ID                                                                                                  | `front-office-client`                   |
-| `OIDC_CLIENT_SECRET`         | Secret. OIDC client secret                                                                                      | local placeholder                       |
-| `OIDC_REDIRECT_PATH`         | OIDC callback path                                                                                              | `/sso`                                  |
-| `OIDC_SERVICE_ID`            | Optional service ID passed to the identity provider                                                             | none                                    |
-| `AUTH_ALLOW_LIST_ENABLED`    | Only let users on the allow-list sign in                                                                        | `false`                                 |
-| `AUTH_ALLOW_LIST_EMAILS`     | Secret. Comma-separated email addresses on the allow-list                                                       | empty                                   |
-| `CATTLE_HOME_API_KEY`        | Secret. API key for `lis-be4fe-cattle-home`                                                                     | empty                                   |
-| `CATTLE_HOME_API_TIMEOUT`    | Timeout for `lis-be4fe-cattle-home` requests (ms)                                                               | `5000`                                  |
-| `MAPBOX_API_KEY`             | Secret. Mapbox API key                                                                                          | local placeholder                       |
+| Variable                                            | Description                                                                                                     | Default                                 |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `ENVIRONMENT`                                       | Environment name (`local`, `docker_compose`, `dev`, `test`, `prod`, ...)                                        | `local`                                 |
+| `HOST`                                              | Address to bind                                                                                                 | `0.0.0.0`                               |
+| `PORT`                                              | Port to bind                                                                                                    | `8085`                                  |
+| `SERVICE_VERSION`                                   | Deployed version, for logs                                                                                      | none                                    |
+| `ASSET_PATH`                                        | Base path for static assets                                                                                     | `/public`                               |
+| `STATIC_CACHE_TIMEOUT`                              | Static asset cache timeout (ms)                                                                                 | `86400000`                              |
+| `HTTP_PROXY`                                        | Outbound HTTP proxy                                                                                             | none                                    |
+| `LOG_ENABLED`                                       | Whether logging is on                                                                                           | `true`                                  |
+| `LOG_LEVEL`                                         | Log level                                                                                                       | `info`                                  |
+| `LOG_FORMAT`                                        | `ecs` or `pretty`                                                                                               | `ecs` in production, otherwise `pretty` |
+| `LOG_HASH_SECRET`                                   | Secret. Key for hashing sensitive values in logs                                                                | none                                    |
+| `MAINTENANCE_AVAILABLE_FROM`                        | UK local date-time (e.g. `2026-11-19T09:00`) to show the maintenance page until; empty means not in maintenance | empty                                   |
+| `HUB_ORIGIN`                                        | Public origin of the hub                                                                                        | `http://localhost:3101`                 |
+| `SESSION_CACHE_ENGINE`                              | `memory` or `redis`                                                                                             | `memory`                                |
+| `SESSION_CACHE_NAME`                                | Session cache name                                                                                              | `front-office-session`                  |
+| `SESSION_CACHE_TTL`                                 | Server-side session TTL (ms)                                                                                    | `14400000`                              |
+| `SESSION_COOKIE_TTL`                                | Session cookie TTL (ms)                                                                                         | `14400000`                              |
+| `SESSION_COOKIE_PASSWORD`                           | Secret, required. Encrypts the session cookie (at least 32 characters)                                          | none                                    |
+| `REDIS_HOST`                                        | Redis host                                                                                                      | `127.0.0.1`                             |
+| `REDIS_PORT`                                        | Redis port                                                                                                      | `6379`                                  |
+| `REDIS_USERNAME`                                    | Redis username                                                                                                  | empty                                   |
+| `REDIS_PASSWORD`                                    | Secret. Redis password                                                                                          | empty                                   |
+| `REDIS_KEY_PREFIX`                                  | Redis key prefix                                                                                                | `front-office:`                         |
+| `REDIS_TLS`                                         | Connect to Redis over TLS                                                                                       | `false`                                 |
+| `USE_SINGLE_INSTANCE_CACHE`                         | Single Redis instance rather than a cluster                                                                     | `true`                                  |
+| `HUB_JWT_SECRET`                                    | Secret, required. Signs and verifies hub JWTs                                                                   | none                                    |
+| `HUB_JWT_ISSUER`                                    | Hub JWT issuer                                                                                                  | `http://localhost:3101`                 |
+| `HUB_JWT_AUDIENCE`                                  | Hub JWT audience                                                                                                | `livestock-spokes`                      |
+| `HUB_JWT_COOKIE_NAME`                               | Cookie that carries the hub JWT                                                                                 | `livestock_hub_jwt`                     |
+| `HUB_JWT_TTL_SECONDS`                               | Hub JWT TTL (seconds)                                                                                           | `14400`                                 |
+| `OIDC_DISCOVERY_URL`                                | Defra Customer Identity OIDC discovery URL                                                                      | none                                    |
+| `OIDC_CLIENT_ID`                                    | OIDC client ID                                                                                                  | `front-office-client`                   |
+| `OIDC_CLIENT_SECRET`                                | Secret. OIDC client secret                                                                                      | local placeholder                       |
+| `OIDC_REDIRECT_PATH`                                | OIDC callback path                                                                                              | `/sso`                                  |
+| `OIDC_SERVICE_ID`                                   | Optional service ID passed to the identity provider                                                             | none                                    |
+| `AUTH_ALLOW_LIST_ENABLED`                           | Only let users on the allow-list sign in                                                                        | `false`                                 |
+| `AUTH_ALLOW_LIST_EMAILS`                            | Secret. Comma-separated email addresses on the allow-list                                                       | empty                                   |
+| `CATTLE_HOME_API_KEY`                               | Secret. API key for `lis-be4fe-cattle-home`                                                                     | empty                                   |
+| `CATTLE_HOME_API_TIMEOUT`                           | Total time allowed for a `lis-be4fe-cattle-home` response, headers and body (ms)                                | `5000`                                  |
+| `CATTLE_HOME_API_CIRCUIT_BREAKER_FAILURE_THRESHOLD` | Consecutive transport failures before the `lis-be4fe-cattle-home` circuit opens                                 | `5`                                     |
+| `CATTLE_HOME_API_CIRCUIT_BREAKER_RESET_TIMEOUT`     | Time the `lis-be4fe-cattle-home` circuit stays open before a probe request (ms)                                 | `30000`                                 |
+| `PROXY_TIMEOUT`                                     | Time to wait for a spoke's response headers before answering 504 (ms)                                           | `30000`                                 |
+| `PROXY_CIRCUIT_BREAKER_FAILURE_THRESHOLD`           | Consecutive transport failures before a spoke's circuit opens                                                   | `5`                                     |
+| `PROXY_CIRCUIT_BREAKER_RESET_TIMEOUT`               | Time a spoke's circuit stays open before a probe request (ms)                                                   | `30000`                                 |
+| `MAPBOX_API_KEY`                                    | Secret. Mapbox API key                                                                                          | local placeholder                       |
 
 On CDP, the platform also sets `AWS_REGION` for service tokens. In lis-dev, the compose files set
 `AWS_ENDPOINT_URL_STS` to point at the fake STS.
