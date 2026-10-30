@@ -83,8 +83,8 @@ cp .env.example .env
 ```
 
 `.env` is loaded when running standalone, and also by a sideloaded `npm run dev` for variables that
-compose does not set. `HUB_JWT_SECRET` and `SESSION_COOKIE_PASSWORD` have no
-default. `.env.example` sets local values for both, which you can keep for local use (the password must
+compose does not set. `HUB_JWT_SECRET`, `SESSION_COOKIE_PASSWORD` and `OIDC_CLIENT_SECRET` have no
+default. `.env.example` sets local values for all three, which you can keep for local use (the password must
 be at least 32 characters).
 
 ### Test
@@ -166,7 +166,7 @@ CDP portal for every deployed environment.
 | `HUB_JWT_TTL_SECONDS`                               | Hub JWT TTL (seconds)                                                                                           | `14400`                                 |
 | `OIDC_DISCOVERY_URL`                                | Defra Customer Identity OIDC discovery URL                                                                      | none                                    |
 | `OIDC_CLIENT_ID`                                    | OIDC client ID                                                                                                  | `front-office-client`                   |
-| `OIDC_CLIENT_SECRET`                                | Secret. OIDC client secret                                                                                      | local placeholder                       |
+| `OIDC_CLIENT_SECRET`                                | Secret, required. OIDC client secret                                                                            | none                                    |
 | `OIDC_REDIRECT_PATH`                                | OIDC callback path                                                                                              | `/sso`                                  |
 | `OIDC_SERVICE_ID`                                   | Optional service ID passed to the identity provider                                                             | none                                    |
 | `AUTH_ALLOW_LIST_ENABLED`                           | Only let users on the allow-list sign in                                                                        | `false`                                 |
