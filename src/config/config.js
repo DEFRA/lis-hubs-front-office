@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import convictFormatWithValidator from 'convict-format-with-validator'
 
 import {
+  cdpEnvironment,
   duration,
   positiveInteger,
   secret
@@ -22,6 +23,7 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 const sessionTtl = duration({ max: 'P7D' })
 
 convict.addFormats(convictFormatWithValidator)
+convict.addFormat(cdpEnvironment)
 convict.addFormat(sessionTtl)
 convict.addFormat(positiveInteger)
 convict.addFormat(secret)
@@ -36,15 +38,7 @@ export const config = convict({
   },
   environment: {
     doc: 'The current environment',
-    format: [
-      'local',
-      'docker_compose',
-      'dev',
-      'test',
-      'ext-test',
-      'perf-test',
-      'prod'
-    ],
+    format: cdpEnvironment.name,
     default: 'local',
     env: 'ENVIRONMENT'
   },
@@ -366,7 +360,7 @@ export const config = convict({
       clientSecret: {
         doc: 'OIDC client secret',
         format: String,
-        default: 'front-office-client-secret',
+        default: null,
         env: 'OIDC_CLIENT_SECRET',
         sensitive: true
       },
