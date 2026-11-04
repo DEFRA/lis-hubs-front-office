@@ -1,7 +1,10 @@
 import { describe, expect, test, vi } from 'vitest'
 
 vi.mock('@defra/lis-hubs-infra-registry', () => ({
-  getBasePathForModule: () => '/cattle'
+  getMountPath: (module, _mount, { cph }) =>
+    module === 'cattle-home'
+      ? `/holdings/${cph}/cattle`
+      : `/holdings/${cph}/cattle/${module.replace('cattle-', '')}`
 }))
 
 import { toCattleSection } from './cattle.js'
@@ -36,15 +39,24 @@ describe('toCattleSection()', () => {
           label: 'Cattle on holding',
           count: 18,
           status: 'green',
-          href: '/cattle/holdings/12/345/0001/animals'
+          href: '/holdings/12/345/0001/cattle/animals'
         },
         { label: 'In progress', count: 4, status: 'amber' },
         { label: 'Cattle with errors', count: 2, status: 'red' }
       ],
       services: [
-        { text: 'Register a cattle birth', href: '/cattle' },
-        { text: 'Report a cattle movement', href: '/cattle' },
-        { text: 'Report a cattle death', href: '/cattle' }
+        {
+          text: 'Register a cattle birth',
+          href: '/holdings/12/345/0001/cattle/register'
+        },
+        {
+          text: 'Report a cattle movement',
+          href: '/holdings/12/345/0001/cattle/move'
+        },
+        {
+          text: 'Report a cattle death',
+          href: '/holdings/12/345/0001/cattle/death'
+        }
       ],
       help: [
         {
@@ -88,7 +100,10 @@ describe('toCattleSection()', () => {
 
     // Assert
     expect(result.services).toEqual([
-      { text: 'Register a cattle birth', href: '/cattle' }
+      {
+        text: 'Register a cattle birth',
+        href: '/holdings/12/345/0001/cattle/register'
+      }
     ])
   })
 

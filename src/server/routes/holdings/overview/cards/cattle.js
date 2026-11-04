@@ -2,7 +2,7 @@ import {
   PERMISSIONS,
   hasPermission
 } from '@defra/lis-hubs-infra-access/authorization'
-import { getBasePathForModule } from '@defra/lis-hubs-infra-registry'
+import { getMountPath } from '@defra/lis-hubs-infra-registry'
 
 /**
  * @import { HoldingSummary } from '../view-model.js'
@@ -71,7 +71,7 @@ const help = [
  * @returns {SpeciesSection}
  */
 export function toCattleSection({ cph, cattle }, user) {
-  const animalsPath = `${getBasePathForModule('cattle-home')}/holdings/${cph}/animals`
+  const animalsPath = `${getMountPath('cattle-home', 'holding', { cph })}/animals`
 
   return {
     code: 'ctt',
@@ -90,7 +90,7 @@ export function toCattleSection({ cph, cattle }, user) {
       .filter(({ permission }) => hasPermission(user, { permission, cph }))
       .map(({ text, module }) => ({
         text,
-        href: getBasePathForModule(module)
+        href: getMountPath(module, 'holding', { cph })
       })),
     help
   }
