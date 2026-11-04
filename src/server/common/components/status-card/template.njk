@@ -1,0 +1,15 @@
+{%- set classes = "lis-status-card lis-status-card--" + params.status -%}
+{%- if params.href -%}
+<a class="{{ classes }}" href="{{ params.href }}">
+{%- else -%}
+<div class="{{ classes }}">
+{%- endif -%}
+  <span class="lis-status-card__inner">
+    <span class="lis-status-card__number">{{ params.count }}</span>
+    <span class="lis-status-card__label">{{ params.label }}</span>
+  </span>
+{%- if params.href -%}
+</a>
+{%- else -%}
+</div>
+{%- endif -%}

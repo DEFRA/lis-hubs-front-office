@@ -181,7 +181,7 @@ describe('#frontOfficeServer', () => {
       '<div class="lis-sortable-table__wrapper" data-module="lis-scrollable-table" tabindex="0" role="region" aria-label="My holdings table">'
     )
     expect(result).toContain(
-      '<a class="govuk-link" href="/cattle/holdings/12/345/0001">12/345/0001</a>'
+      '<a class="govuk-link" href="/holdings/12/345/0001">12/345/0001</a>'
     )
     expect(result).toContain('<td class="govuk-table__cell">Oakfield Farm</td>')
     expect(result).toContain('<td class="govuk-table__cell">Agent</td>')
