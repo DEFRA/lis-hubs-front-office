@@ -32,7 +32,10 @@ function credentialsFor(cphs) {
         {
           role: 'lis-role-cattle-read',
           cphs,
-          permissions: ['lis-perm-cattle-read']
+          permissions: [
+            'lis-perm-cattle-read',
+            'lis-perm-cattle-register-write'
+          ]
         }
       ]
     },
@@ -90,6 +93,7 @@ describe('GET /holdings/{cph}', () => {
       'href="/cattle/holdings/12/345/0001/animals"'
     )
     expect(response.result).toContain('href="/cattle/register"')
+    expect(response.result).not.toContain('href="/cattle/move"')
     expect(response.result).toContain('up to 24 hours')
   })
 

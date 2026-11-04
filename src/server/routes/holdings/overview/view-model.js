@@ -29,6 +29,6 @@ export function toHoldingOverviewViewModel(summary, user) {
     tabs: [{ text: 'Overview', href: `/holdings/${cph}`, active: true }],
     speciesSections: speciesCards
       .filter(({ permission }) => hasPermission(user, { permission, cph }))
-      .map(({ toSection }) => toSection(summary))
+      .map(({ toSection }) => toSection(summary, user))
   }
 }

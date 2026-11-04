@@ -4,11 +4,11 @@ vi.mock('./cards/index.js', () => ({
   speciesCards: [
     {
       permission: 'lis-perm-cattle-read',
-      toSection: (summary) => ({ code: 'ctt', from: summary })
+      toSection: (summary, user) => ({ code: 'ctt', from: summary, user })
     },
     {
       permission: 'lis-perm-sheep-read',
-      toSection: (summary) => ({ code: 'shp', from: summary })
+      toSection: (summary, user) => ({ code: 'shp', from: summary, user })
     }
   ]
 }))
@@ -40,7 +40,9 @@ describe('toHoldingOverviewViewModel()', () => {
       holdingName: 'Oakfield Farm',
       cph: '12/345/0001',
       tabs: [{ text: 'Overview', href: '/holdings/12/345/0001', active: true }],
-      speciesSections: [{ code: 'ctt', from: summary }]
+      speciesSections: [
+        { code: 'ctt', from: summary, user: userWith(['lis-perm-cattle-read']) }
+      ]
     })
   })
 
@@ -61,7 +63,9 @@ describe('toHoldingOverviewViewModel()', () => {
     // Assert
     expect(result.pageTitle).toBe('12/345/0001')
     expect(result.holdingName).toBeNull()
-    expect(result.speciesSections).toEqual([{ code: 'ctt', from: summary }])
+    expect(result.speciesSections).toEqual([
+      { code: 'ctt', from: summary, user: userWith(['lis-perm-cattle-read']) }
+    ])
   })
 
   test('shows a section for each species the user may read on the holding', () => {

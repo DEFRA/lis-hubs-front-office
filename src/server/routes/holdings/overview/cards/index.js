@@ -10,7 +10,7 @@ import { toCattleSection } from './cattle.js'
 /**
  * @typedef {object} SpeciesCard
  * @property {string} permission the read permission that shows this species on a holding
- * @property {(summary: HoldingSummary) => SpeciesSection} toSection
+ * @property {(summary: HoldingSummary, user: object) => SpeciesSection} toSection
  */
 
 /**
