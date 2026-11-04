@@ -1,0 +1,79 @@
+@use 'govuk-frontend' as govuk;
+
+// One bordered panel per species on the holding overview.
+.lis-species-panel {
+  border: 1px solid govuk.govuk-functional-colour(border);
+  padding: govuk.govuk-spacing(5);
+  margin-bottom: govuk.govuk-spacing(6);
+
+  @include govuk.govuk-media-query($until: tablet) {
+    padding: govuk.govuk-spacing(3);
+  }
+}
+
+.lis-status-card {
+  display: block;
+  background-color: govuk.govuk-colour('black', $variant: 'tint-95');
+  border: 1px solid govuk.govuk-functional-colour(border);
+  border-left: 0;
+  color: govuk.govuk-functional-colour(text);
+  text-decoration: none;
+
+  @include govuk.govuk-media-query($until: tablet) {
+    margin-bottom: govuk.govuk-spacing(2);
+  }
+
+  &:focus {
+    @include govuk.govuk-focused-text;
+  }
+}
+
+.lis-status-card[href]:hover .lis-status-card__label {
+  color: govuk.govuk-functional-colour(link-hover);
+  text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
+}
+
+.lis-status-card__inner {
+  display: block;
+  border-left: 6px solid;
+  padding: govuk.govuk-spacing(4);
+
+  @include govuk.govuk-media-query($until: tablet) {
+    padding: govuk.govuk-spacing(2);
+  }
+}
+
+.lis-status-card__number {
+  @include govuk.govuk-font($size: 36, $weight: bold);
+  display: block;
+  margin-bottom: govuk.govuk-spacing(1);
+  color: govuk.govuk-functional-colour(text);
+}
+
+.lis-status-card__label {
+  @include govuk.govuk-font($size: 19, $weight: bold);
+  display: block;
+  color: govuk.govuk-functional-colour(text);
+}
+
+.lis-status-card[href] .lis-status-card__label {
+  @include govuk.govuk-link-decoration;
+  color: govuk.govuk-functional-colour(link);
+}
+
+.lis-status-card[href]:focus .lis-status-card__label {
+  color: govuk.$govuk-focus-text-colour;
+  text-decoration: none;
+}
+
+.lis-status-card--green .lis-status-card__inner {
+  border-left-color: govuk.govuk-colour('green');
+}
+
+.lis-status-card--amber .lis-status-card__inner {
+  border-left-color: govuk.govuk-colour('orange');
+}
+
+.lis-status-card--red .lis-status-card__inner {
+  border-left-color: govuk.govuk-colour('red');
+}

@@ -28,11 +28,9 @@ export const homeController = {
         pageTitle: 'My holdings'
       })
     }
-    // Temporary steel-thread shortcut: assumes every holding is cattle.
     if (holdings.length === 1) {
-      return h.redirect(
-        `/cattle/holdings/${holdings[0].countyParishHoldingNumber}`
-      )
+      // The overview is gated on cattle read: assumes every holding is cattle.
+      return h.redirect(`/holdings/${holdings[0].countyParishHoldingNumber}`)
     }
 
     return h.view('home/holdings', {

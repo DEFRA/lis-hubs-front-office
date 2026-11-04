@@ -104,7 +104,7 @@ describe('#frontOfficeHomeController', () => {
     })
   })
 
-  test('Should redirect to the cattle holding page when the user has a single holding', async () => {
+  test('Should redirect to the holding overview when the user has a single holding', async () => {
     // Arrange
     const view = vi.fn()
     const redirect = vi.fn(() => 'redirected')
@@ -128,7 +128,7 @@ describe('#frontOfficeHomeController', () => {
 
     // Assert
     expect(response).toBe('redirected')
-    expect(redirect).toHaveBeenCalledWith('/cattle/holdings/12/345/0001')
+    expect(redirect).toHaveBeenCalledWith('/holdings/12/345/0001')
     expect(view).not.toHaveBeenCalled()
   })
 

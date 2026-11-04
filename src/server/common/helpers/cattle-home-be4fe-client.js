@@ -27,6 +27,14 @@ const localPort = 8087
 
 const notFound = 404
 
+const cphPattern = /^\d{2}\/\d{3}\/\d{4}$/
+
+/**
+ * @typedef {object} CattleSummary
+ * @property {string} cattle_id
+ * @property {string} eartag
+ */
+
 class CattleHomeBe4FeClient extends BaseClient {
   /**
    * @param {object} options
@@ -55,6 +63,29 @@ class CattleHomeBe4FeClient extends BaseClient {
       const { payload } = await this._get(
         `api/users/${encodeURIComponent(userId)}`
       )
+      return payload.data
+    } catch (error) {
+      if (error.statusCode === notFound) {
+        return null
+      }
+      throw error
+    }
+  }
+
+  /**
+   * The live cattle on a holding. The BE4FE returns the whole list; there is
+   * no paging or total count on this endpoint.
+   *
+   * @param {string} cph county/parish/holding, e.g. 12/345/0001
+   * @returns {Promise<CattleSummary[] | null>} the cattle, or null if the BE4FE doesn't know the holding
+   */
+  async getCattleOnHolding(cph) {
+    if (!cphPattern.test(cph)) {
+      throw new TypeError('CPH must contain county, parish and holding')
+    }
+
+    try {
+      const { payload } = await this._get(`api/cphs/${cph}/cattle`)
       return payload.data
     } catch (error) {
       if (error.statusCode === notFound) {

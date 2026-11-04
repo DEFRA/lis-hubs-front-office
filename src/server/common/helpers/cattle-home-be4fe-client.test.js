@@ -131,3 +131,75 @@ describe('CattleHomeBe4FeClient circuit breaker', () => {
     expect(reloadedClient._circuitBreaker.state).toBe('open')
   })
 })
+
+describe('CattleHomeBe4FeClient.getCattleOnHolding()', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  test('requests the cattle list and returns the payload data', async () => {
+    // Arrange
+    const data = [
+      { cattle_id: 'UK123', eartag: 'UK123' },
+      { cattle_id: 'UK124', eartag: 'UK124' }
+    ]
+    const get = vi
+      .spyOn(client, '_get')
+      .mockResolvedValueOnce({ res: { statusCode: 200 }, payload: { data } })
+
+    // Act
+    const result = await client.getCattleOnHolding('12/345/0001')
+
+    // Assert
+    expect(get).toHaveBeenCalledWith('api/cphs/12/345/0001/cattle')
+    expect(result).toEqual(data)
+  })
+
+  test('returns null when the BE4FE does not know the holding', async () => {
+    // Arrange
+    const notFoundError = new Error('Request failed - 404')
+    notFoundError.statusCode = 404
+    vi.spyOn(client, '_get').mockRejectedValueOnce(notFoundError)
+
+    // Act
+    const result = await client.getCattleOnHolding('12/345/0001')
+
+    // Assert
+    expect(result).toBeNull()
+  })
+
+  test('rejects a CPH that is not county/parish/holding', async () => {
+    // Arrange
+    const get = vi.spyOn(client, '_get')
+
+    // Act
+    let error
+    try {
+      await client.getCattleOnHolding('12/345')
+    } catch (e) {
+      error = e
+    }
+
+    // Assert
+    expect(error).toEqual(
+      new TypeError('CPH must contain county, parish and holding')
+    )
+    expect(get).not.toHaveBeenCalled()
+  })
+
+  test('propagates request errors', async () => {
+    // Arrange
+    vi.spyOn(client, '_get').mockRejectedValueOnce(new Error('be4fe down'))
+
+    // Act
+    let error
+    try {
+      await client.getCattleOnHolding('12/345/0001')
+    } catch (e) {
+      error = e
+    }
+
+    // Assert
+    expect(error).toEqual(new Error('be4fe down'))
+  })
+})

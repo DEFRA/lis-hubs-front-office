@@ -11,7 +11,7 @@
   {%- set rows = [] -%}
   {%- for holding in holdings -%}
     {%- set cphHtml -%}
-      <a class="govuk-link" href="/cattle/holdings/{{ holding.countyParishHoldingNumber }}">{{ holding.countyParishHoldingNumber }}</a>
+      <a class="govuk-link" href="/holdings/{{ holding.countyParishHoldingNumber }}">{{ holding.countyParishHoldingNumber }}</a>
     {%- endset -%}
     {%- set _ = rows.push([
       { html: cphHtml },

@@ -24,6 +24,7 @@ import { config } from '#config/config.js'
 import { auth } from '#server/routes/auth/index.js'
 import { health } from '#server/routes/health/index.js'
 import { home } from '#server/routes/home/index.js'
+import { holdings } from '#server/routes/holdings/index.js'
 import { contentSecurityPolicy } from '#server/plugins/content-security-policy.js'
 import { serveStaticFiles } from '#server/plugins/serve-static-files.js'
 import { accessDenied } from '#server/routes/auth/access-denied/index.js'
@@ -133,6 +134,7 @@ export async function createServer() {
     health.plugin,
     createCookiesPlugin({ essentialCookies }),
     home.plugin,
+    holdings.plugin,
     proxy.plugin
   ])
 

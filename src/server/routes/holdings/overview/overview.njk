@@ -1,0 +1,58 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "status-card/macro.njk" import lisStatusCard %}
+
+{% block content %}
+  {% if holdingName %}
+    <span class="govuk-caption-l">{{ cph }}</span>
+    <h1 class="govuk-heading-xl govuk-!-margin-bottom-4">{{ holdingName }}</h1>
+  {% else %}
+    <h1 class="govuk-heading-xl govuk-!-margin-bottom-4">{{ cph }}</h1>
+  {% endif %}
+
+  {{ lisSubNavigation({
+    label: "Holding sections",
+    classes: "govuk-!-margin-bottom-5",
+    items: tabs
+  }) }}
+
+  {{ govukInsetText({
+    classes: "govuk-!-margin-top-0",
+    text: "Changes such as registrations, movements and deaths may take up to 24 hours to move from ‘In progress’."
+  }) }}
+
+  {% for section in speciesSections %}
+    <section class="lis-species-panel" data-species="{{ section.code }}" aria-labelledby="species-{{ section.code }}">
+      <h2 class="govuk-heading-l govuk-!-margin-bottom-4" id="species-{{ section.code }}">{{ section.label }}</h2>
+
+      <div class="govuk-grid-row govuk-!-margin-bottom-4">
+        {% for card in section.cards %}
+          <div class="govuk-grid-column-one-third">
+            {{ lisStatusCard(card) }}
+          </div>
+        {% endfor %}
+      </div>
+
+      <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-one-half">
+          <h3 class="govuk-heading-m">Your services</h3>
+          <ul class="govuk-list">
+            {% for link in section.services %}
+              <li><a class="govuk-link govuk-link--no-visited-state" href="{{ link.href }}">{{ link.text }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="govuk-grid-column-one-half">
+          <h3 class="govuk-heading-m">Help and support</h3>
+          <ul class="govuk-list">
+            {% for link in section.help %}
+              <li><a class="govuk-link govuk-link--no-visited-state" href="{{ link.href }}">{{ link.text }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+  {% endfor %}
+{% endblock %}
