@@ -1,10 +1,8 @@
 import Boom from '@hapi/boom'
-import {
-  PERMISSIONS,
-  hasPermission
-} from '@defra/lis-hubs-infra-access/authorization'
+import { hasPermission } from '@defra/lis-hubs-infra-access/authorization'
 
 import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
+import { speciesCards } from './cards/index.js'
 import { toHoldingOverviewViewModel } from './view-model.js'
 
 /** @import { Request, ResponseObject, ResponseToolkit } from '@hapi/hapi' */
@@ -12,9 +10,9 @@ import { toHoldingOverviewViewModel } from './view-model.js'
 const cphPattern = /^\d{2}\/\d{3}\/\d{4}$/
 
 /**
- * Route pre-handler. Only a user granted cattle read on this CPH may view
- * it. Not found rather than forbidden, so a holding's existence isn't
- * confirmed to someone not entitled to it.
+ * Route pre-handler. Only a user granted read on this CPH for at least one
+ * species may view it. Not found rather than forbidden, so a holding's
+ * existence isn't confirmed to someone not entitled to it.
  *
  * @param {Request} request
  * @param {ResponseToolkit} h
@@ -22,13 +20,13 @@ const cphPattern = /^\d{2}\/\d{3}\/\d{4}$/
  */
 export function demandHoldingAccess(request, h) {
   const { cph } = request.params
+  const { user } = request.auth.credentials
 
   if (
     cphPattern.test(cph) &&
-    hasPermission(request.auth.credentials.user, {
-      permission: PERMISSIONS.cattleRead,
-      cph
-    })
+    speciesCards.some(({ permission }) =>
+      hasPermission(user, { permission, cph })
+    )
   ) {
     return h.continue
   }
@@ -66,7 +64,7 @@ export const holdingOverviewController = {
 
     return h.view(
       'holdings/overview/overview',
-      toHoldingOverviewViewModel(summary)
+      toHoldingOverviewViewModel(summary, request.auth.credentials.user)
     )
   }
 }

@@ -10,7 +10,7 @@ vi.mock('#server/common/helpers/cattle-home-be4fe-client.js', () => ({
   }
 }))
 vi.mock('./view-model.js', () => ({
-  toHoldingOverviewViewModel: (summary) => ({ mapped: summary })
+  toHoldingOverviewViewModel: (summary, user) => ({ mapped: summary, user })
 }))
 
 import { demandHoldingAccess, holdingOverviewController } from './controller.js'
@@ -109,7 +109,8 @@ describe('holdingOverviewController', () => {
         cph: '12/345/0001',
         name: 'Oakfield Farm',
         cattle: { on_holding: 2, in_progress: 0, with_errors: 0 }
-      }
+      },
+      user: expect.objectContaining({ sub: 'user-1' })
     })
   })
 
@@ -127,7 +128,8 @@ describe('holdingOverviewController', () => {
 
     // Assert
     expect(view).toHaveBeenCalledWith('holdings/overview/overview', {
-      mapped: { cph: '12/345/0001', name: 'Oakfield Farm', cattle: noCattle }
+      mapped: { cph: '12/345/0001', name: 'Oakfield Farm', cattle: noCattle },
+      user: expect.objectContaining({ sub: 'user-1' })
     })
   })
 
@@ -145,7 +147,8 @@ describe('holdingOverviewController', () => {
 
     // Assert
     expect(view).toHaveBeenCalledWith('holdings/overview/overview', {
-      mapped: { cph: '12/345/0001', name: null, cattle: noCattle }
+      mapped: { cph: '12/345/0001', name: null, cattle: noCattle },
+      user: expect.objectContaining({ sub: 'user-1' })
     })
   })
 
@@ -160,7 +163,8 @@ describe('holdingOverviewController', () => {
 
     // Assert
     expect(view).toHaveBeenCalledWith('holdings/overview/overview', {
-      mapped: { cph: '12/345/0001', name: null, cattle: noCattle }
+      mapped: { cph: '12/345/0001', name: null, cattle: noCattle },
+      user: expect.objectContaining({ sub: 'user-1' })
     })
   })
 

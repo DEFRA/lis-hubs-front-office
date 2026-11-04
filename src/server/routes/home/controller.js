@@ -29,7 +29,6 @@ export const homeController = {
       })
     }
     if (holdings.length === 1) {
-      // The overview is gated on cattle read: assumes every holding is cattle.
       return h.redirect(`/holdings/${holdings[0].countyParishHoldingNumber}`)
     }
 

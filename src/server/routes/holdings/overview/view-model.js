@@ -1,4 +1,6 @@
-import { toCattleSection } from './cards/cattle.js'
+import { hasPermission } from '@defra/lis-hubs-infra-access/authorization'
+
+import { speciesCards } from './cards/index.js'
 
 /**
  * @typedef {object} HoldingSummary
@@ -9,12 +11,14 @@ import { toCattleSection } from './cards/cattle.js'
 
 /**
  * Maps the holding summary onto the overview page: heading, the section
- * tabs and one section per species with its cards and links.
+ * tabs and one section per species the user may read on the holding, with
+ * its cards and links.
  *
  * @param {HoldingSummary} summary
+ * @param {object} user the signed-in user's authorization
  * @returns {object} The overview page template data
  */
-export function toHoldingOverviewViewModel(summary) {
+export function toHoldingOverviewViewModel(summary, user) {
   const { cph } = summary
   const holdingName = summary.name ?? null
 
@@ -23,8 +27,8 @@ export function toHoldingOverviewViewModel(summary) {
     holdingName,
     cph,
     tabs: [{ text: 'Overview', href: `/holdings/${cph}`, active: true }],
-    // One section per species the holding keeps. Only cattle today; add a
-    // module under ./cards for each species as it lands.
-    speciesSections: [toCattleSection(summary)]
+    speciesSections: speciesCards
+      .filter(({ permission }) => hasPermission(user, { permission, cph }))
+      .map(({ toSection }) => toSection(summary))
   }
 }
