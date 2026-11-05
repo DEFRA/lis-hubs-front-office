@@ -1,7 +1,4 @@
-import {
-  createHubAuth,
-  createHubCookieOptions
-} from '@defra/lis-hubs-infra-access/authentication'
+import { createHubAuth } from '@defra/lis-hubs-infra-access/authentication'
 import { resolveAuthorization } from '@defra/lis-hubs-infra-access/authorization'
 
 import { logger } from '@defra/lis-hubs-infra-core'
@@ -47,16 +44,6 @@ async function resolveAuthSession({ user }) {
   })
 }
 
-function getHubJwtCookieName() {
-  return config.get('auth.hubJwt.cookieName')
-}
-
-function getCookieOptions() {
-  return createHubCookieOptions({
-    ttlSeconds: config.get('auth.hubJwt.ttlSeconds')
-  })
-}
-
 function getHubJwtConfig() {
   return {
     secret: config.get('auth.hubJwt.secret'),
@@ -68,8 +55,6 @@ function getHubJwtConfig() {
 
 export const auth = createHubAuth({
   hubId: 'front-office',
-  getHubJwtCookieName,
-  getCookieOptions,
   getHubJwtConfig,
   resolveAuthSession,
   buildAuthorizationUrl,

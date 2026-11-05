@@ -311,12 +311,6 @@ export const config = convict({
       }
     },
     hubJwt: {
-      cookieName: {
-        doc: 'Cookie name that carries the hub-issued JWT',
-        format: String,
-        default: 'livestock_hub_jwt',
-        env: 'HUB_JWT_COOKIE_NAME'
-      },
       secret: {
         doc: 'Shared secret used to sign and verify hub-issued JWTs',
         format: secret.name,

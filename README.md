@@ -26,10 +26,12 @@ browser → front-office hub ─┬─ /holdings/<cph>/cattle             → li
 ```
 
 - **Authentication:** users sign in with Defra Customer Identity (OIDC). The hub keeps a
-  server-side session (Redis on CDP) and issues a hub JWT in a cookie, which the spokes
-  verify.
-- **Spokes:** the hub proxies each path to its spoke, forwarding only the hub JWT cookie. The list
-  of spokes and their paths comes from
+  server-side session (Redis on CDP) and keeps the user's hub JWT in it. The proxy sends the JWT to
+  the spokes in the `x-lis-jwt-assertion` header, which they verify. The browser holds only the session
+  cookie and `cookies_policy`.
+- **Spokes:** the hub proxies each path to its spoke, sending the user's hub JWT in the
+  `x-lis-jwt-assertion` header and forwarding only the `cookies_policy` consent cookie. The list of
+  spokes and their paths comes from
   [lis-hubs-infra-registry](https://github.com/DEFRA/lis-hubs-infra-registry).
 - **Downstream calls:** the home page reads the user's holdings from `lis-be4fe-cattle-home`, with an
   AWS STS service token and an API key.
@@ -52,8 +54,8 @@ The OIDC redirect URI is `HUB_ORIGIN` followed by `OIDC_REDIRECT_PATH`. The hub 
 callback at `/sso`, so keep `OIDC_REDIRECT_PATH` as `/sso`: changing it alone breaks sign-in. If
 `HUB_ORIGIN` changes, update the Defra Customer Identity app registration to match exactly.
 
-The hub's `HUB_JWT_ISSUER` must be in each spoke's `HUB_ORIGINS`. `HUB_JWT_AUDIENCE`,
-`HUB_JWT_COOKIE_NAME` and `HUB_JWT_SECRET` must match the spoke's values.
+The hub's `HUB_JWT_ISSUER` must be in each spoke's `HUB_ORIGINS`. `HUB_JWT_AUDIENCE`
+and `HUB_JWT_SECRET` must match the spoke's values.
 
 ### Routes
 
@@ -164,7 +166,6 @@ CDP portal for every deployed environment.
 | `HUB_JWT_SECRET`                                    | Secret, required. Signs and verifies hub JWTs                                                                   | none                                    |
 | `HUB_JWT_ISSUER`                                    | Hub JWT issuer                                                                                                  | `http://localhost:3101`                 |
 | `HUB_JWT_AUDIENCE`                                  | Hub JWT audience                                                                                                | `livestock-spokes`                      |
-| `HUB_JWT_COOKIE_NAME`                               | Cookie that carries the hub JWT                                                                                 | `livestock_hub_jwt`                     |
 | `HUB_JWT_TTL_SECONDS`                               | Hub JWT TTL (seconds)                                                                                           | `14400`                                 |
 | `OIDC_DISCOVERY_URL`                                | Defra Customer Identity OIDC discovery URL                                                                      | none                                    |
 | `OIDC_CLIENT_ID`                                    | OIDC client ID                                                                                                  | `front-office-client`                   |
