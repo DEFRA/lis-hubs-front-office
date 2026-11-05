@@ -6,11 +6,13 @@ const {
   buildAuthorizationUrl,
   buildLogoutUrl,
   completeAuthorizationCodeGrant,
+  getLogoutOrigins,
   configGet,
   createUser
 } = vi.hoisted(() => ({
   buildAuthorizationUrl: vi.fn(),
   buildLogoutUrl: vi.fn(),
+  getLogoutOrigins: vi.fn(),
   completeAuthorizationCodeGrant: vi.fn(),
   configGet: vi.fn(),
   createUser: vi.fn()
@@ -29,7 +31,8 @@ vi.mock('#config/config.js', () => ({
 vi.mock('#server/common/helpers/auth/oidc.js', () => ({
   buildAuthorizationUrl,
   buildLogoutUrl,
-  completeAuthorizationCodeGrant
+  completeAuthorizationCodeGrant,
+  getLogoutOrigins
 }))
 
 import { auth } from './index.js'

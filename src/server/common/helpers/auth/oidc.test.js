@@ -6,6 +6,7 @@ const { configGet, createOidcClient } = vi.hoisted(() => ({
     buildAuthorizationUrl: vi.fn(),
     buildLogoutUrl: vi.fn(),
     completeAuthorizationCodeGrant: vi.fn(),
+    getLogoutOrigins: vi.fn(),
     getOidcMetadata: vi.fn()
   }))
 }))

@@ -29,6 +29,7 @@ export const {
   buildAuthorizationUrl,
   buildLogoutUrl,
   completeAuthorizationCodeGrant,
+  getLogoutOrigins,
   getOidcMetadata
 } = createOidcClient({
   getProviderConfig,

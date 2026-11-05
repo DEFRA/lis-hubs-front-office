@@ -13,7 +13,8 @@ import {
 import {
   buildAuthorizationUrl,
   buildLogoutUrl,
-  completeAuthorizationCodeGrant
+  completeAuthorizationCodeGrant,
+  getLogoutOrigins
 } from '#server/common/helpers/auth/oidc.js'
 
 export const ACCESS_DENIED_PATH = '/auth/access-denied'
@@ -60,6 +61,7 @@ export const auth = createHubAuth({
   buildAuthorizationUrl,
   completeAuthorizationCodeGrant,
   buildLogoutUrl,
+  getLogoutOrigins,
   loginRoutes: [{ path: '/auth/login' }],
   notAuthorisedPath: ACCESS_DENIED_PATH
 })
