@@ -90,10 +90,14 @@ describe('GET /holdings/{cph}', () => {
     expect(response.result).toContain('Oakfield Farm')
     expect(response.result).toContain('Cattle on holding')
     expect(response.result).toContain(
-      'href="/cattle/holdings/12/345/0001/animals"'
+      'href="/holdings/12/345/0001/cattle/animals"'
     )
-    expect(response.result).toContain('href="/cattle/register"')
-    expect(response.result).not.toContain('href="/cattle/move"')
+    expect(response.result).toContain(
+      'href="/holdings/12/345/0001/cattle/register"'
+    )
+    expect(response.result).not.toContain(
+      'href="/holdings/12/345/0001/cattle/move"'
+    )
     expect(response.result).toContain('up to 24 hours')
   })
 

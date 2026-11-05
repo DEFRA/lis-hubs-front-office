@@ -14,13 +14,15 @@ environments, deployments, logs and metrics.
 ## Architecture
 
 LIS uses a hub and spoke design. A hub owns sign-in and sessions; each spoke is a separate app for
-one species and task, mounted under a path on the hub:
+one species and task, proxied by the hub at its registry mounts, with the path forwarded unchanged:
 
 ```text
-browser → front-office hub ─┬─ /cattle           → lis-apps-cattle-home     → lis-be4fe-cattle-home → lis-api-cattle
-                            ├─ /cattle/register  → lis-apps-cattle-register
-                            ├─ /cattle/move      → lis-apps-cattle-move
-                            └─ /cattle/death     → lis-apps-cattle-death
+browser → front-office hub ─┬─ /holdings/<cph>/cattle             → lis-apps-cattle-home     → lis-be4fe-cattle-home → lis-api-cattle
+                            ├─ /animals/cattle                    → lis-apps-cattle-home
+                            ├─ /holdings/<cph>/cattle/register    → lis-apps-cattle-register
+                            ├─ /holdings/<cph>/cattle/move        → lis-apps-cattle-move
+                            ├─ /holdings/<cph>/cattle/death       → lis-apps-cattle-death
+                            └─ /assets/<module id>                → the matching spoke
 ```
 
 - **Authentication:** users sign in with Defra Customer Identity (OIDC). The hub keeps a
@@ -42,7 +44,7 @@ hub and spoke design.
 
 ### Sign-in and direct microsite access
 
-The hub is the only place users sign in. A request for a spoke URL such as `/cattle/register`
+The hub is the only place users sign in. A request for a spoke URL such as `/holdings/<cph>/cattle/register/...`
 without a valid hub JWT redirects to `/auth/login` with the original path as a relative
 `returnUrl`. After sign-in completes at `/sso`, the hub sends the browser back to that path.
 
@@ -55,16 +57,16 @@ The hub's `HUB_JWT_ISSUER` must be in each spoke's `HUB_ORIGINS`. `HUB_JWT_AUDIE
 
 ### Routes
 
-| Path                  | Purpose                                                                    |
-| --------------------- | -------------------------------------------------------------------------- |
-| `/`                   | Welcome page, or the user's holdings once signed in                        |
-| `/auth/login`         | Starts sign-in                                                             |
-| `/sso`                | OIDC callback                                                              |
-| `/auth/logout`        | Signs the user out                                                         |
-| `/signout`            | Redirects to `/auth/logout` (the header link)                              |
-| `/auth/access-denied` | Tells a refused user they do not have permission yet, with a sign out link |
-| `/health`             | Health check                                                               |
-| `/cattle/...`         | Proxied to the cattle spokes (see above)                                   |
+| Path                                                                        | Purpose                                                                    |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `/`                                                                         | Welcome page, or the user's holdings once signed in                        |
+| `/auth/login`                                                               | Starts sign-in                                                             |
+| `/sso`                                                                      | OIDC callback                                                              |
+| `/auth/logout`                                                              | Signs the user out                                                         |
+| `/signout`                                                                  | Redirects to `/auth/logout` (the header link)                              |
+| `/auth/access-denied`                                                       | Tells a refused user they do not have permission yet, with a sign out link |
+| `/health`                                                                   | Health check                                                               |
+| `/holdings/<cph>/cattle/...`, `/animals/cattle/...`, `/assets/<module>/...` | Proxied to the cattle spokes at their registry mounts (see above)          |
 
 ## Prerequisites
 
