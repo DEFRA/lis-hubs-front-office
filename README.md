@@ -59,16 +59,17 @@ and `HUB_JWT_SECRET` must match the spoke's values.
 
 ### Routes
 
-| Path                                                                        | Purpose                                                                    |
-| --------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `/`                                                                         | Welcome page, or the user's holdings once signed in                        |
-| `/auth/login`                                                               | Starts sign-in                                                             |
-| `/sso`                                                                      | OIDC callback                                                              |
-| `/auth/logout`                                                              | Signs the user out                                                         |
-| `/signout`                                                                  | Redirects to `/auth/logout` (the header link)                              |
-| `/auth/access-denied`                                                       | Tells a refused user they do not have permission yet, with a sign out link |
-| `/health`                                                                   | Health check                                                               |
-| `/holdings/<cph>/cattle/...`, `/animals/cattle/...`, `/assets/<module>/...` | Proxied to the cattle spokes at their registry mounts (see above)          |
+| Path                                                                        | Purpose                                                                              |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `/`                                                                         | Welcome page, or the user's holdings once signed in                                  |
+| `/auth/login`                                                               | Starts sign-in                                                                       |
+| `/sso`                                                                      | OIDC callback                                                                        |
+| `GET /auth/logout`                                                          | Redirects to `/signout` (old sign-out path)                                          |
+| `POST /signout`                                                             | Signs the user out from the confirmation page (needs the CSRF token)                 |
+| `GET /signout`                                                              | The header Sign out link: asks a signed-in user to confirm, sends anyone else to `/` |
+| `/auth/access-denied`                                                       | Tells a refused user they do not have permission yet, with a sign out link           |
+| `/health`                                                                   | Health check                                                                         |
+| `/holdings/<cph>/cattle/...`, `/animals/cattle/...`, `/assets/<module>/...` | Proxied to the cattle spokes at their registry mounts (see above)                    |
 
 ## Prerequisites
 
