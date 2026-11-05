@@ -42,7 +42,6 @@ const jwtConfig = {
 
 function createConfigValueMap() {
   return {
-    'auth.hubJwt.cookieName': 'livestock_hub_jwt',
     'auth.hubJwt.secret': jwtConfig.secret,
     'auth.hubJwt.issuer': jwtConfig.issuer,
     'auth.hubJwt.audience': jwtConfig.audience,
@@ -50,20 +49,6 @@ function createConfigValueMap() {
     'auth.allowList.enabled': false,
     'auth.allowList.emails': []
   }
-}
-
-function extractCookieValue(setCookieHeader, cookieName) {
-  const cookieHeader = (
-    Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
-  ).find((value) => value.startsWith(`${cookieName}=`))
-
-  if (!cookieHeader) {
-    throw new Error(`Cookie ${cookieName} was not found in response`)
-  }
-
-  return decodeURIComponent(
-    cookieHeader.split(';')[0].slice(cookieName.length + 1)
-  )
 }
 
 async function createTestServer() {
@@ -76,6 +61,20 @@ async function createTestServer() {
   await server.register(auth.plugin)
 
   return server
+}
+
+function stubSession(server) {
+  const yar = { get: vi.fn(), set: vi.fn(), clear: vi.fn() }
+  server.ext('onRequest', (request, h) => {
+    request.yar = yar
+    return h.continue
+  })
+
+  return yar
+}
+
+function sessionJwt(yar) {
+  return yar.set.mock.calls.find(([key]) => key === 'hub-jwt')?.[1]
 }
 
 describe('#frontOfficeAuthRoutes', () => {
@@ -123,6 +122,7 @@ describe('#frontOfficeAuthRoutes', () => {
     createUser.mockResolvedValue(userDetails)
 
     const server = await createTestServer()
+    const yar = stubSession(server)
     const response = await server.inject({
       method: 'GET',
       url: '/sso'
@@ -138,11 +138,10 @@ describe('#frontOfficeAuthRoutes', () => {
       given_name: user.firstName,
       family_name: user.lastName
     })
-    const token = extractCookieValue(
-      response.headers['set-cookie'],
+    expect([response.headers['set-cookie']].flat().join(' ')).not.toContain(
       'livestock_hub_jwt'
     )
-    const payload = await verifyHubJwt(token, jwtConfig)
+    const payload = await verifyHubJwt(sessionJwt(yar), jwtConfig)
 
     expect(payload.sub).toBe(user.sub)
     expect(payload.statements).toEqual([
@@ -181,6 +180,7 @@ describe('#frontOfficeAuthRoutes', () => {
     })
 
     const server = await createTestServer()
+    const yar = stubSession(server)
     const response = await server.inject({
       method: 'GET',
       url: '/sso'
@@ -192,9 +192,10 @@ describe('#frontOfficeAuthRoutes', () => {
     expect(response.headers.location).toBe('/auth/access-denied')
     expect(buildLogoutUrl).not.toHaveBeenCalled()
     expect(createUser).not.toHaveBeenCalled()
-    expect(
-      extractCookieValue(response.headers['set-cookie'], 'livestock_hub_jwt')
-    ).toBe('')
+    expect([response.headers['set-cookie']].flat().join(' ')).not.toContain(
+      'livestock_hub_jwt'
+    )
+    expect(yar.set).not.toHaveBeenCalledWith('hub-jwt', expect.anything())
   })
 
   test('Should let a user on the allow-list sign in', async () => {
