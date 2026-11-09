@@ -54,7 +54,7 @@
     "govuk-frontend": "6.5.0"
   },
   "peerDependencies": {
-    "eslint": "^9.0.0"
+    "eslint": "^10.14.0"
   },
   "devDependencies": {
     "@babel/preset-env": "7.29.2",
@@ -63,8 +63,8 @@
     "@vitest/coverage-istanbul": "^4.1.10",
     "audit-ci": "^7.1.0",
     "cheerio": "1.2.0",
-    "eslint": "^9.0.0",
-    "eslint-plugin-jsdoc": "^63.0.8",
+    "eslint": "^10.14.0",
+    "eslint-plugin-jsdoc": "^65.4.4",
     "eslint-plugin-sonarjs": "^4.1.0",
     "husky": "9.1.7",
     "nodemon": "3.1.14",
