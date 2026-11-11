@@ -1,18 +1,32 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
+import { createServiceClient } from '@defra/lis-hubs-infra-core'
 
-import { cattleHomeBe4FeClient as client } from './cattle-home-be4fe-client.js'
+import * as client from './cattle-home-be4fe-client.js'
+
+const service = vi.hoisted(() => ({
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  patch: vi.fn(),
+  delete: vi.fn()
+}))
+
+vi.mock('@defra/lis-hubs-infra-core', () => ({
+  createServiceClient: vi.fn(() => service)
+}))
 
 describe('CattleHomeBe4FeClient.getUserDetails()', () => {
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.resetAllMocks()
   })
 
   test('requests the user and returns the payload data', async () => {
     // Arrange
     const data = { subject: 'user-1', cphs: [{ cph: '12/345/0001' }] }
-    const get = vi
-      .spyOn(client, '_get')
-      .mockResolvedValueOnce({ res: { statusCode: 200 }, payload: { data } })
+    const get = service.get.mockResolvedValueOnce({
+      res: { statusCode: 200 },
+      payload: { data }
+    })
 
     // Act
     const result = await client.getUserDetails('user-1')
@@ -24,7 +38,7 @@ describe('CattleHomeBe4FeClient.getUserDetails()', () => {
 
   test('percent-encodes the user ID', async () => {
     // Arrange
-    const get = vi.spyOn(client, '_get').mockResolvedValueOnce({
+    const get = service.get.mockResolvedValueOnce({
       res: { statusCode: 200 },
       payload: { data: {} }
     })
@@ -40,7 +54,7 @@ describe('CattleHomeBe4FeClient.getUserDetails()', () => {
     // Arrange
     const notFoundError = new Error('Request failed - 404')
     notFoundError.statusCode = 404
-    vi.spyOn(client, '_get').mockRejectedValueOnce(notFoundError)
+    service.get.mockRejectedValueOnce(notFoundError)
 
     // Act
     const result = await client.getUserDetails('user-1')
@@ -51,7 +65,7 @@ describe('CattleHomeBe4FeClient.getUserDetails()', () => {
 
   test('propagates request errors', async () => {
     // Arrange
-    vi.spyOn(client, '_get').mockRejectedValueOnce(new Error('be4fe down'))
+    service.get.mockRejectedValueOnce(new Error('be4fe down'))
 
     // Act
     let error
@@ -68,7 +82,7 @@ describe('CattleHomeBe4FeClient.getUserDetails()', () => {
 
 describe('CattleHomeBe4FeClient.createUser()', () => {
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.resetAllMocks()
   })
 
   test('posts the claims and returns the payload data', async () => {
@@ -80,9 +94,10 @@ describe('CattleHomeBe4FeClient.createUser()', () => {
       family_name: 'User'
     }
     const data = { subject: 'user-1', cphs: [{ cph: '12/345/0001' }] }
-    const post = vi
-      .spyOn(client, '_post')
-      .mockResolvedValueOnce({ res: { statusCode: 200 }, payload: { data } })
+    const post = service.post.mockResolvedValueOnce({
+      res: { statusCode: 200 },
+      payload: { data }
+    })
 
     // Act
     const result = await client.createUser(claims)
@@ -97,7 +112,7 @@ describe('CattleHomeBe4FeClient.createUser()', () => {
     const claims = { sub: 'user-1', email: 'keeper@example.com' }
     const conflictError = new Error('409 - Email is bound to another account')
     conflictError.statusCode = 409
-    vi.spyOn(client, '_post').mockRejectedValueOnce(conflictError)
+    service.post.mockRejectedValueOnce(conflictError)
 
     // Act
     let error
@@ -114,6 +129,7 @@ describe('CattleHomeBe4FeClient.createUser()', () => {
 
 describe('CattleHomeBe4FeClient circuit breaker', () => {
   afterEach(() => {
+    vi.resetAllMocks()
     vi.unstubAllEnvs()
   })
 
@@ -121,20 +137,23 @@ describe('CattleHomeBe4FeClient circuit breaker', () => {
     // Arrange
     vi.stubEnv('CATTLE_HOME_API_CIRCUIT_BREAKER_FAILURE_THRESHOLD', '1')
     vi.resetModules()
-    const { cattleHomeBe4FeClient: reloadedClient } =
-      await import('./cattle-home-be4fe-client.js')
+    vi.mocked(createServiceClient).mockReturnValueOnce(service)
 
     // Act
-    reloadedClient._circuitBreaker.recordFailure()
+    await import('./cattle-home-be4fe-client.js')
 
     // Assert
-    expect(reloadedClient._circuitBreaker.state).toBe('open')
+    expect(vi.mocked(createServiceClient)).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        circuitBreaker: expect.objectContaining({ failureThreshold: 1 })
+      })
+    )
   })
 })
 
 describe('CattleHomeBe4FeClient.getCattleOnHolding()', () => {
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.resetAllMocks()
   })
 
   test('requests the cattle list and returns the payload data', async () => {
@@ -143,9 +162,10 @@ describe('CattleHomeBe4FeClient.getCattleOnHolding()', () => {
       { cattle_id: 'UK123', eartag: 'UK123' },
       { cattle_id: 'UK124', eartag: 'UK124' }
     ]
-    const get = vi
-      .spyOn(client, '_get')
-      .mockResolvedValueOnce({ res: { statusCode: 200 }, payload: { data } })
+    const get = service.get.mockResolvedValueOnce({
+      res: { statusCode: 200 },
+      payload: { data }
+    })
 
     // Act
     const result = await client.getCattleOnHolding('12/345/0001')
@@ -159,7 +179,7 @@ describe('CattleHomeBe4FeClient.getCattleOnHolding()', () => {
     // Arrange
     const notFoundError = new Error('Request failed - 404')
     notFoundError.statusCode = 404
-    vi.spyOn(client, '_get').mockRejectedValueOnce(notFoundError)
+    service.get.mockRejectedValueOnce(notFoundError)
 
     // Act
     const result = await client.getCattleOnHolding('12/345/0001')
@@ -170,7 +190,7 @@ describe('CattleHomeBe4FeClient.getCattleOnHolding()', () => {
 
   test('rejects a CPH that is not county/parish/holding', async () => {
     // Arrange
-    const get = vi.spyOn(client, '_get')
+    const get = service.get
 
     // Act
     let error
@@ -189,7 +209,7 @@ describe('CattleHomeBe4FeClient.getCattleOnHolding()', () => {
 
   test('propagates request errors', async () => {
     // Arrange
-    vi.spyOn(client, '_get').mockRejectedValueOnce(new Error('be4fe down'))
+    service.get.mockRejectedValueOnce(new Error('be4fe down'))
 
     // Act
     let error

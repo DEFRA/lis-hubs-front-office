@@ -1,7 +1,7 @@
 import Boom from '@hapi/boom'
 import { hasPermission } from '@defra/lis-hubs-infra-access/authorization'
 
-import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
+import * as cattleHomeBe4FeClient from '#server/common/helpers/cattle-home-be4fe-client.js'
 import { speciesCards } from './cards/index.js'
 import { toHoldingOverviewViewModel } from './view-model.js'
 

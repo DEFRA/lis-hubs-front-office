@@ -15,11 +15,9 @@ const { getUserDetails, getCattleOnHolding } = vi.hoisted(() => ({
 }))
 
 vi.mock('#server/common/helpers/cattle-home-be4fe-client.js', () => ({
-  cattleHomeBe4FeClient: {
-    getUserDetails,
-    getCattleOnHolding,
-    createUser: vi.fn()
-  }
+  getUserDetails,
+  getCattleOnHolding,
+  createUser: vi.fn()
 }))
 
 import { createServer } from '#server/server.js'

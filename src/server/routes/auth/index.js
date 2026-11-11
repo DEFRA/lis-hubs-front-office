@@ -5,7 +5,7 @@ import { logger } from '@defra/lis-hubs-infra-core'
 
 import { config } from '#config/config.js'
 import { isAllowListed } from '#server/common/helpers/auth/allow-list.js'
-import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
+import * as cattleHomeBe4FeClient from '#server/common/helpers/cattle-home-be4fe-client.js'
 import {
   toHoldingRolesFromUserCphs,
   toHoldingsFromUserCphs
