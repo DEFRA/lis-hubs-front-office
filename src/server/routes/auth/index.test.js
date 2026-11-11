@@ -19,7 +19,7 @@ const {
 }))
 
 vi.mock('#server/common/helpers/cattle-home-be4fe-client.js', () => ({
-  cattleHomeBe4FeClient: { createUser }
+  createUser
 }))
 
 vi.mock('#config/config.js', () => ({

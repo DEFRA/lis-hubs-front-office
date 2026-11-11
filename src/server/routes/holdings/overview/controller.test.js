@@ -1,13 +1,11 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
+import * as cattleHomeBe4FeClient from '#server/common/helpers/cattle-home-be4fe-client.js'
 
 vi.mock('#server/common/helpers/cattle-home-be4fe-client.js', () => ({
-  cattleHomeBe4FeClient: {
-    getUserDetails: vi.fn(),
-    getCattleOnHolding: vi.fn(),
-    createUser: vi.fn()
-  }
+  getUserDetails: vi.fn(),
+  getCattleOnHolding: vi.fn(),
+  createUser: vi.fn()
 }))
 vi.mock('./view-model.js', () => ({
   toHoldingOverviewViewModel: (summary, user) => ({ mapped: summary, user })

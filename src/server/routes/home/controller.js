@@ -1,6 +1,6 @@
 import { MODULES, SPECIES } from '@defra/lis-hubs-infra-registry'
 
-import { cattleHomeBe4FeClient } from '#server/common/helpers/cattle-home-be4fe-client.js'
+import * as cattleHomeBe4FeClient from '#server/common/helpers/cattle-home-be4fe-client.js'
 import { toHoldingsFromUserCphs } from '#server/common/helpers/cattle-home-be4fe-mapping.js'
 
 export const homeController = {
