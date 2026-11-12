@@ -57,7 +57,7 @@
     "eslint": "^10.14.0"
   },
   "devDependencies": {
-    "@defra/lis-infra-eslint-config": "^0.12.3",
+    "@defra/lis-infra-eslint-config": "^0.12.7",
     "@vitest/coverage-istanbul": "^5.1.0",
     "eslint": "^10.14.0",
     "husky": "9.1.7",
