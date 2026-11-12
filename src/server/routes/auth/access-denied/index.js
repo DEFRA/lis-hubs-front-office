@@ -1,3 +1,5 @@
+/** @import { Server } from '@hapi/hapi' */
+
 import { statusCodes } from '@defra/lis-infra-ui-services/status-codes'
 
 import { ACCESS_DENIED_PATH } from '../index.js'
@@ -5,6 +7,10 @@ import { ACCESS_DENIED_PATH } from '../index.js'
 export const accessDenied = {
   plugin: {
     name: 'access-denied',
+    /**
+     * Registers the route on the server.
+     * @param {Server} server - The Hapi server
+     */
     register(server) {
       server.route({
         method: 'GET',
