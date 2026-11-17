@@ -439,7 +439,9 @@ describe('#frontOfficeServer CSRF protection', () => {
 
   test('Should leave the token check on proxied spoke routes to the spoke', () => {
     // Act
-    const proxyRoutes = server.table().filter(({ method }) => method === '*')
+    const proxyRoutes = server
+      .table()
+      .filter(({ path }) => path.endsWith('/{path*}'))
 
     // Assert
     expect(proxyRoutes.length).toBeGreaterThan(0)
@@ -450,7 +452,9 @@ describe('#frontOfficeServer CSRF protection', () => {
 
   test('Should refuse a cross-site POST to a proxied spoke route', async () => {
     // Arrange
-    const [proxyRoute] = server.table().filter(({ method }) => method === '*')
+    const [proxyRoute] = server
+      .table()
+      .filter(({ path }) => path.endsWith('/{path*}'))
 
     // Act
     const response = await server.inject({
