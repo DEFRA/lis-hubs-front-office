@@ -74,11 +74,16 @@ describe('#frontOfficeServer', () => {
     // Act
     const response = await server.inject({
       method: 'GET',
-      url: '/no-such-page'
+      url: '/no-such-page',
+      headers: {
+        cookie:
+          'cookies_policy=%7B%22essential%22%3Atrue%2C%22analytics%22%3Atrue%7D'
+      }
     })
 
     // Assert
     expect(response.statusCode).toBe(404)
+    expect(response.result).not.toContain('govuk-cookie-banner')
     expect(response.result).toContain('Page not found')
     expect(response.result).toContain(
       'If you typed the web address, check it is correct.'
