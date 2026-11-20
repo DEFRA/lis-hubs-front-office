@@ -35,6 +35,21 @@ const cphPattern = /^\d{2}\/\d{3}\/\d{4}$/
  * @property {string} eartag
  */
 
+/**
+ * @typedef {object} HerdMark
+ * @property {string} mark
+ * @property {string[]} species
+ */
+
+/**
+ * @typedef {object} HoldingDetails
+ * @property {string} cph
+ * @property {string | null} [name]
+ * @property {string[]} [address]
+ * @property {string[]} [correspondence_address] absent from BE4FE releases before LREG-779
+ * @property {HerdMark[]} [herd_marks]
+ */
+
 const be4fe = createServiceClient({
   environment: config.get('environment'),
   serviceName: 'lis-be4fe-cattle-home',
@@ -45,14 +60,12 @@ const be4fe = createServiceClient({
 })
 
 /**
- * @param {string} userId
- * @returns {Promise<UserDetails | null>} the user's details and the CPHs they hold, or null if the BE4FE doesn't know the user
+ * @param {string} path BE4FE path to GET
+ * @returns {Promise<any | null>} the response's data, or null if the BE4FE answers not found
  */
-export async function getUserDetails(userId) {
+async function getOrNull(path) {
   try {
-    const { payload } = await be4fe.get(
-      `api/users/${encodeURIComponent(userId)}`
-    )
+    const { payload } = await be4fe.get(path)
     return payload.data
   } catch (error) {
     if (error.statusCode === notFound) {
@@ -60,6 +73,14 @@ export async function getUserDetails(userId) {
     }
     throw error
   }
+}
+
+/**
+ * @param {string} userId
+ * @returns {Promise<UserDetails | null>} the user's details and the CPHs they hold, or null if the BE4FE doesn't know the user
+ */
+export async function getUserDetails(userId) {
+  return getOrNull(`api/users/${encodeURIComponent(userId)}`)
 }
 
 /**
@@ -74,15 +95,19 @@ export async function getCattleOnHolding(cph) {
     throw new TypeError('CPH must contain county, parish and holding')
   }
 
-  try {
-    const { payload } = await be4fe.get(`api/cphs/${cph}/cattle`)
-    return payload.data
-  } catch (error) {
-    if (error.statusCode === notFound) {
-      return null
-    }
-    throw error
+  return getOrNull(`api/cphs/${cph}/cattle`)
+}
+
+/**
+ * @param {string} cph county/parish/holding, e.g. 12/345/0001
+ * @returns {Promise<HoldingDetails | null>} the holding's details, or null if the BE4FE doesn't know the holding
+ */
+export async function getHoldingDetails(cph) {
+  if (!cphPattern.test(cph)) {
+    throw new TypeError('CPH must contain county, parish and holding')
   }
+
+  return getOrNull(`api/cphs/${cph}`)
 }
 
 /**

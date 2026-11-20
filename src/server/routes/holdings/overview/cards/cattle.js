@@ -63,16 +63,15 @@ const help = [
 
 /**
  * The cattle section of the holding overview: the cattle-on-holding card
- * linking to the animals list, the in-progress and errors cards, the cattle
- * services the user may use on the holding, and the help links.
+ * linking to the cattle list (the cattle-home spoke's holding page), the
+ * in-progress and errors cards, the cattle services the user may use on the
+ * holding, and the help links.
  *
  * @param {Pick<HoldingSummary, 'cph' | 'cattle'>} summary
  * @param {object} user the signed-in user's authorization
  * @returns {SpeciesSection}
  */
 export function toCattleSection({ cph, cattle }, user) {
-  const animalsPath = `${getMountPath('cattle-home', 'holding', { cph })}/animals`
-
   return {
     code: 'ctt',
     label: 'Cattle',
@@ -81,7 +80,7 @@ export function toCattleSection({ cph, cattle }, user) {
         label: 'Cattle on holding',
         count: cattle.on_holding,
         status: 'green',
-        href: animalsPath
+        href: getMountPath('cattle-home', 'holding', { cph })
       },
       { label: 'In progress', count: cattle.in_progress, status: 'amber' },
       { label: 'Cattle with errors', count: cattle.with_errors, status: 'red' }

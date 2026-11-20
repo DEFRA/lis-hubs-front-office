@@ -39,7 +39,7 @@ describe('toCattleSection()', () => {
           label: 'Cattle on holding',
           count: 18,
           status: 'green',
-          href: '/holdings/12/345/0001/cattle/animals'
+          href: '/holdings/12/345/0001/cattle'
         },
         { label: 'In progress', count: 4, status: 'amber' },
         { label: 'Cattle with errors', count: 2, status: 'red' }

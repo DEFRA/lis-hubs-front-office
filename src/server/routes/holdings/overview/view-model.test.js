@@ -39,7 +39,10 @@ describe('toHoldingOverviewViewModel()', () => {
       pageTitle: 'Oakfield Farm',
       holdingName: 'Oakfield Farm',
       cph: '12/345/0001',
-      tabs: [{ text: 'Overview', href: '/holdings/12/345/0001', active: true }],
+      tabs: [
+        { text: 'Overview', href: '/holdings/12/345/0001', active: true },
+        { text: 'Holding details', href: '/holdings/12/345/0001/details' }
+      ],
       speciesSections: [
         { code: 'ctt', from: summary, user: userWith(['lis-perm-cattle-read']) }
       ]

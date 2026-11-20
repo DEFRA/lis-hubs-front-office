@@ -1,0 +1,48 @@
+{% extends 'layouts/page.njk' %}
+
+{% from "not-supplied/macro.njk" import notSupplied %}
+
+{% set notSuppliedHtml = notSupplied() %}
+
+{#- Turns the view model's rows into govukSummaryList rows: lines joined with
+    <br>, a single text, the row's own empty text, or the "Not supplied" tag. -#}
+{%- macro summaryRowsFor(rows) -%}
+  {%- set out = [] -%}
+  {%- for row in rows -%}
+    {%- set linesHtml -%}
+      {%- for line in row.lines -%}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {%- endfor -%}
+    {%- endset -%}
+    {%- if row.lines.length or row.text -%}
+      {%- set value = { html: linesHtml } if row.lines.length else { text: row.text } -%}
+    {%- elif row.emptyText -%}
+      {%- set value = { text: row.emptyText } -%}
+    {%- else -%}
+      {%- set value = { html: notSuppliedHtml } -%}
+    {%- endif -%}
+    {%- set _ = out.push({ key: { text: row.key }, value: value }) -%}
+  {%- endfor -%}
+  {{ govukSummaryList({ rows: out }) }}
+{%- endmacro -%}
+
+{% block content %}
+  {% if holdingName %}
+    <span class="govuk-caption-l">{{ cph }}</span>
+    <h1 class="govuk-heading-xl govuk-!-margin-bottom-4">{{ holdingName }}</h1>
+  {% else %}
+    <h1 class="govuk-heading-xl govuk-!-margin-bottom-4">{{ cph }}</h1>
+  {% endif %}
+
+  {{ lisSubNavigation({
+    label: "Holding sections",
+    classes: "govuk-!-margin-bottom-5",
+    items: tabs
+  }) }}
+
+  <h2 class="govuk-heading-m">Holding details</h2>
+  {{ summaryRowsFor(holdingRows) }}
+
+  <h2 class="govuk-heading-m">Correspondence details</h2>
+  {{ summaryRowsFor(correspondenceRows) }}
+{% endblock %}

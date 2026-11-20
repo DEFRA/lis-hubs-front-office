@@ -1,5 +1,6 @@
 /** @import { Server } from '@hapi/hapi' */
 
+import { holdingDetailsController } from './details/controller.js'
 import {
   demandHoldingAccess,
   holdingOverviewController
@@ -18,6 +19,13 @@ export const holdings = {
         path: '/holdings/{cph*3}',
         options: { pre: [{ method: demandHoldingAccess }] },
         ...holdingOverviewController
+      })
+
+      server.route({
+        method: 'GET',
+        path: '/holdings/{cph*3}/details',
+        options: { pre: [{ method: demandHoldingAccess }] },
+        ...holdingDetailsController
       })
     }
   }

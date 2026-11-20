@@ -223,3 +223,73 @@ describe('CattleHomeBe4FeClient.getCattleOnHolding()', () => {
     expect(error).toEqual(new Error('be4fe down'))
   })
 })
+
+describe('CattleHomeBe4FeClient.getHoldingDetails()', () => {
+  afterEach(() => {
+    vi.resetAllMocks()
+  })
+
+  test('requests the holding and returns the payload data', async () => {
+    // Arrange
+    const data = { cph: '12/345/0001', name: 'Oakfield Farm' }
+    const get = service.get.mockResolvedValueOnce({
+      res: { statusCode: 200 },
+      payload: { data }
+    })
+
+    // Act
+    const result = await client.getHoldingDetails('12/345/0001')
+
+    // Assert
+    expect(get).toHaveBeenCalledWith('api/cphs/12/345/0001')
+    expect(result).toEqual(data)
+  })
+
+  test('returns null when the BE4FE does not know the holding', async () => {
+    // Arrange
+    const notFoundError = new Error('Request failed - 404')
+    notFoundError.statusCode = 404
+    service.get.mockRejectedValueOnce(notFoundError)
+
+    // Act
+    const result = await client.getHoldingDetails('12/345/0001')
+
+    // Assert
+    expect(result).toBeNull()
+  })
+
+  test('rejects a CPH that is not county/parish/holding', async () => {
+    // Arrange
+    const get = service.get
+
+    // Act
+    let error
+    try {
+      await client.getHoldingDetails('12/345')
+    } catch (e) {
+      error = e
+    }
+
+    // Assert
+    expect(error).toEqual(
+      new TypeError('CPH must contain county, parish and holding')
+    )
+    expect(get).not.toHaveBeenCalled()
+  })
+
+  test('propagates request errors', async () => {
+    // Arrange
+    service.get.mockRejectedValueOnce(new Error('be4fe down'))
+
+    // Act
+    let error
+    try {
+      await client.getHoldingDetails('12/345/0001')
+    } catch (e) {
+      error = e
+    }
+
+    // Assert
+    expect(error).toEqual(new Error('be4fe down'))
+  })
+})
