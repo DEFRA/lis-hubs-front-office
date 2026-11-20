@@ -1,11 +1,15 @@
 import Boom from '@hapi/boom'
 import { hasPermission } from '@defra/lis-hubs-infra-access/authorization'
+import { logger } from '@defra/lis-hubs-infra-core'
 
 import * as cattleHomeBe4FeClient from '#server/common/helpers/cattle-home-be4fe-client.js'
 import { speciesCards } from './cards/index.js'
 import { toHoldingOverviewViewModel } from './view-model.js'
 
-/** @import { Request, ResponseObject, ResponseToolkit } from '@hapi/hapi' */
+/**
+ * @import { Request, ResponseObject, ResponseToolkit } from '@hapi/hapi'
+ * @import { HoldingSummary } from './view-model.js'
+ */
 
 const cphPattern = /^\d{2}\/\d{3}\/\d{4}$/
 
@@ -38,6 +42,27 @@ export function demandHoldingAccess(request, h) {
 // tiles show zero until one exists.
 const PLACEHOLDER_COUNT = 0
 
+/**
+ * The cattle counts for the holding, or null when they cannot be read, so
+ * the overview still renders with the cattle section marked unavailable.
+ *
+ * @param {string} cph
+ * @returns {Promise<HoldingSummary['cattle']>}
+ */
+async function getCattleCounts(cph) {
+  try {
+    const cattle = await cattleHomeBe4FeClient.getCattleOnHolding(cph)
+    return {
+      on_holding: cattle?.length ?? 0,
+      in_progress: PLACEHOLDER_COUNT,
+      with_errors: PLACEHOLDER_COUNT
+    }
+  } catch (error) {
+    logger.error(error, 'Cattle on holding unavailable for the overview')
+    return null
+  }
+}
+
 export const holdingOverviewController = {
   /**
    * @param {Request} request
@@ -48,18 +73,14 @@ export const holdingOverviewController = {
     const { cph } = request.params
     const [userDetails, cattle] = await Promise.all([
       cattleHomeBe4FeClient.getUserDetails(request.auth.credentials.user.sub),
-      cattleHomeBe4FeClient.getCattleOnHolding(cph)
+      getCattleCounts(cph)
     ])
     const holding = userDetails?.cphs?.find((entry) => entry.cph === cph)
 
     const summary = {
       cph,
       name: holding?.holding_name ?? null,
-      cattle: {
-        on_holding: cattle?.length ?? 0,
-        in_progress: PLACEHOLDER_COUNT,
-        with_errors: PLACEHOLDER_COUNT
-      }
+      cattle
     }
 
     return h.view(

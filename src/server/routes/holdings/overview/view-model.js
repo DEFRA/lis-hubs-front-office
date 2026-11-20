@@ -6,7 +6,7 @@ import { speciesCards } from './cards/index.js'
  * @typedef {object} HoldingSummary
  * @property {string} cph
  * @property {string | null} name
- * @property {{ on_holding: number, in_progress: number, with_errors: number }} cattle
+ * @property {{ on_holding: number, in_progress: number, with_errors: number } | null} cattle null when the cattle counts could not be read
  */
 
 /**

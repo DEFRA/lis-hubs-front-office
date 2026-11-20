@@ -71,6 +71,22 @@ describe('toCattleSection()', () => {
     })
   })
 
+  test('replaces the cards with a notice, keeping services and help, when the counts are unavailable', () => {
+    // Arrange
+    const summary = { cph: '12/345/0001', cattle: null }
+
+    // Act
+    const result = toCattleSection(summary, userWith(allServices))
+
+    // Assert
+    expect(result.cards).toEqual([])
+    expect(result.unavailableText).toBe(
+      'Cattle information is currently unavailable. Refresh the page in your browser or try again later.'
+    )
+    expect(result.services).toHaveLength(3)
+    expect(result.help).toHaveLength(2)
+  })
+
   test('shows zero counts as zero', () => {
     // Arrange
     const summary = {

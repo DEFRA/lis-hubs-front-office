@@ -101,6 +101,39 @@ describe('GET /holdings/{cph}', () => {
     expect(response.result).toContain('up to 24 hours')
   })
 
+  test('keeps the page, with a notice in place of the cattle cards, when the cattle on the holding cannot be read', async () => {
+    // Arrange
+    getUserDetails.mockResolvedValueOnce({
+      subject: 'user-1',
+      cphs: [
+        { cph: '12/345/0001', holding_name: 'Oakfield Farm', role: 'Owner' }
+      ]
+    })
+    getCattleOnHolding.mockRejectedValueOnce(new Error('be4fe unavailable'))
+
+    // Act
+    const response = await server.inject({
+      method: 'GET',
+      url: '/holdings/12/345/0001',
+      auth: {
+        strategy: HUB_AUTH_STRATEGY,
+        credentials: credentialsFor(['12/345/0001'])
+      }
+    })
+
+    // Assert
+    expect(response.statusCode).toBe(200)
+    expect(response.result).toContain('Oakfield Farm')
+    expect(response.result).toContain(
+      '<p class="govuk-body">Cattle information is currently unavailable. Refresh the page in your browser or try again later.</p>'
+    )
+    expect(response.result).not.toContain('Cattle on holding')
+    expect(response.result).toContain(
+      'href="/holdings/12/345/0001/cattle/register"'
+    )
+    expect(response.result).toContain('Contact BCMS')
+  })
+
   test('returns 404 for a holding the user may not read', async () => {
     // Act
     const response = await server.inject({
