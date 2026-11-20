@@ -6,7 +6,7 @@ import { speciesCards } from './cards/index.js'
  * @typedef {object} HoldingSummary
  * @property {string} cph
  * @property {string | null} name
- * @property {{ on_holding: number, in_progress: number, with_errors: number }} cattle
+ * @property {{ on_holding: number, in_progress: number, with_errors: number } | null} cattle null when the cattle counts could not be read
  */
 
 /**
@@ -26,7 +26,10 @@ export function toHoldingOverviewViewModel(summary, user) {
     pageTitle: holdingName ?? cph,
     holdingName,
     cph,
-    tabs: [{ text: 'Overview', href: `/holdings/${cph}`, active: true }],
+    tabs: [
+      { text: 'Overview', href: `/holdings/${cph}`, active: true },
+      { text: 'Holding details', href: `/holdings/${cph}/details` }
+    ],
     speciesSections: speciesCards
       .filter(({ permission }) => hasPermission(user, { permission, cph }))
       .map(({ toSection }) => toSection(summary, user))

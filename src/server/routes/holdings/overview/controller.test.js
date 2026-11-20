@@ -11,6 +11,8 @@ vi.mock('./view-model.js', () => ({
   toHoldingOverviewViewModel: (summary, user) => ({ mapped: summary, user })
 }))
 
+import { logger } from '@defra/lis-hubs-infra-core'
+
 import { demandHoldingAccess, holdingOverviewController } from './controller.js'
 
 const mocks = {
@@ -166,7 +168,37 @@ describe('holdingOverviewController', () => {
     })
   })
 
-  test('propagates a BE4FE failure', async () => {
+  test('marks the cattle counts unavailable, and logs, when they cannot be read', async () => {
+    // Arrange
+    const view = vi.fn(() => 'rendered')
+    const failure = new Error('be4fe unavailable')
+    mocks.getUserDetails.mockResolvedValueOnce({
+      subject: 'user-1',
+      cphs: [{ cph: '12/345/0001', holding_name: 'Oakfield Farm' }]
+    })
+    mocks.getCattleOnHolding.mockRejectedValueOnce(failure)
+    const logError = vi.fn()
+    vi.spyOn(logger, 'error', 'get').mockReturnValueOnce(logError)
+
+    // Act
+    const response = await holdingOverviewController.handler(
+      requestFor('12/345/0001'),
+      { view }
+    )
+
+    // Assert
+    expect(response).toBe('rendered')
+    expect(view).toHaveBeenCalledWith('holdings/overview/overview', {
+      mapped: { cph: '12/345/0001', name: 'Oakfield Farm', cattle: null },
+      user: expect.objectContaining({ sub: 'user-1' })
+    })
+    expect(logError).toHaveBeenCalledWith(
+      failure,
+      'Cattle on holding unavailable for the overview'
+    )
+  })
+
+  test('propagates a user details failure', async () => {
     // Arrange
     mocks.getUserDetails.mockRejectedValueOnce(new Error('be4fe unavailable'))
     mocks.getCattleOnHolding.mockResolvedValueOnce([])

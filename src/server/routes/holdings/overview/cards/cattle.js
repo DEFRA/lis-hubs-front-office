@@ -27,6 +27,7 @@ import { getMountPath } from '@defra/lis-hubs-infra-registry'
  * @property {string} code species code from the registry
  * @property {string} label section heading
  * @property {StatusCard[]} cards
+ * @property {string} [unavailableText] shown in place of the cards when the species' data could not be read
  * @property {Link[]} services the species' reporting services
  * @property {Link[]} help guidance and contact links for the species
  */
@@ -63,29 +64,38 @@ const help = [
 
 /**
  * The cattle section of the holding overview: the cattle-on-holding card
- * linking to the animals list, the in-progress and errors cards, the cattle
- * services the user may use on the holding, and the help links.
+ * linking to the cattle list (the cattle-home spoke's holding page), the
+ * in-progress and errors cards (or a notice in their place when the counts
+ * could not be read), the cattle services the user may use on the
+ * holding, and the help links.
  *
  * @param {Pick<HoldingSummary, 'cph' | 'cattle'>} summary
  * @param {object} user the signed-in user's authorization
  * @returns {SpeciesSection}
  */
 export function toCattleSection({ cph, cattle }, user) {
-  const animalsPath = `${getMountPath('cattle-home', 'holding', { cph })}/animals`
-
   return {
     code: 'ctt',
     label: 'Cattle',
-    cards: [
-      {
-        label: 'Cattle on holding',
-        count: cattle.on_holding,
-        status: 'green',
-        href: animalsPath
-      },
-      { label: 'In progress', count: cattle.in_progress, status: 'amber' },
-      { label: 'Cattle with errors', count: cattle.with_errors, status: 'red' }
-    ],
+    cards: cattle
+      ? [
+          {
+            label: 'Cattle on holding',
+            count: cattle.on_holding,
+            status: 'green',
+            href: getMountPath('cattle-home', 'holding', { cph })
+          },
+          { label: 'In progress', count: cattle.in_progress, status: 'amber' },
+          {
+            label: 'Cattle with errors',
+            count: cattle.with_errors,
+            status: 'red'
+          }
+        ]
+      : [],
+    unavailableText: cattle
+      ? undefined
+      : 'Cattle information is currently unavailable. Refresh the page in your browser or try again later.',
     services: services
       .filter(({ permission }) => hasPermission(user, { permission, cph }))
       .map(({ text, module }) => ({
