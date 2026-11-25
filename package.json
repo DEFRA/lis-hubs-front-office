@@ -40,9 +40,9 @@
   "author": "Defra DDTS",
   "license": "OGL-UK-3.0",
   "dependencies": {
-    "@defra/lis-hubs-infra-access": "^0.45.3",
+    "@defra/lis-hubs-infra-access": "^0.45.9",
     "@defra/lis-hubs-infra-core": "^0.35.0",
-    "@defra/lis-hubs-infra-registry": "^0.13.3",
+    "@defra/lis-hubs-infra-registry": "^0.13.9",
     "@defra/lis-infra-ui-services": "^0.55.0",
     "@hapi/boom": "10.0.1",
     "@hapi/hapi": "21.4.13",
@@ -56,7 +56,7 @@
     "eslint": "^10.14.0"
   },
   "devDependencies": {
-    "@defra/lis-infra-eslint-config": "^0.12.7",
+    "@defra/lis-infra-eslint-config": "^0.14.0",
     "@vitest/coverage-istanbul": "^5.1.0",
     "eslint": "^10.14.0",
     "husky": "9.1.7",
