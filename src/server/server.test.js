@@ -183,7 +183,7 @@ describe('#frontOfficeServer', () => {
 
     expect(result).toContain('<h1 class="govuk-heading-xl">My holdings</h1>')
     expect(result).toContain(
-      '<div class="lis-sortable-table__wrapper" data-module="lis-scrollable-table" tabindex="0" role="region" aria-label="My holdings table">'
+      '<div class="lis-scrollable-pane" data-module="lis-scrollable-pane" role="region" tabindex="0" aria-label="My holdings table">'
     )
     expect(result).toContain(
       '<a class="govuk-link" href="/holdings/12/345/0001">12/345/0001</a>'
