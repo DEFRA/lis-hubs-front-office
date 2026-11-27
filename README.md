@@ -210,19 +210,24 @@ End-to-end journeys are covered by [lis-journey-tests](https://github.com/DEFRA/
 Build, versioning and publishing run in GitHub Actions (`.github/workflows`) using the shared
 composite actions in [lis-github-actions](https://github.com/DEFRA/lis-github-actions):
 
-- **Pull request to `main`**: validate (format, lint, test), Sonar analysis, version check
-- **Push to a `feature/` or `hotfix/` branch**: prerelease version and tag
-- **Merge to `main`**: release tag, then publish the container image
+- **Pull request to `main`** (`pull-request.yml`): calculate the version, build, test and
+  smoke-test the container image, and Sonar analysis
+- **Push to a `feature/` or `hotfix/` branch** (`prerelease.yml`): the same, then a prerelease
+  tag if the Sonar quality gate passes
+- **Merge to `main`** (`release.yml`): the same, then a release tag if the Sonar quality gate
+  passes
+- **Version tag pushed** (`publish.yml`): publish the container image built for that tag
 
-Versions come from git tags (SemVer). Validation builds the `production` target of the
+Versions come from git tags (SemVer). The build builds the `production` target of the
 `Dockerfile`, checks the container's `/health` endpoint and keeps the tested image as a workflow
 artifact. When a tag is pushed, `publish.yml` publishes that exact image to Amazon ECR, tagged with
-the version and the commit (`sha-...`), using GitHub OIDC rather than long-lived AWS keys.
+the version and the commit (`sha-...`), using GitHub OIDC rather than long-lived AWS keys. A
+prerelease version goes to ECR only; a stable version is also pushed to Docker Hub as
+`defradigital/lis-hubs-front-office`.
 
-The workflows need these GitHub Actions variables: `AWS_REGION`, `AWS_ACCOUNT_ID` and, optionally,
-`ECR_REPOSITORY` (defaults to the repository name). AWS must have a
-`github-<image-name>-build-role` IAM role that trusts this repository and can push to that ECR
-repository.
+The publish workflow needs the `LIS_AWS_ACCOUNT_ID` secret. The ECR repository is in `eu-west-2`
+and is named after this repository, and AWS must have a `github-<repository>-build-role` IAM role
+that trusts this repository and can push to it.
 
 ## Branching policy
 
